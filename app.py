@@ -14,7 +14,7 @@ from action_pack.analyser import analyse_with_ai_or_fallback
 from action_pack.extractor import extract_text_from_upload
 from action_pack.fallback_analyser import analyse_without_ai
 from action_pack.presentation import action_label, source_is_duplicate
-from action_pack.renderer import render_copy_message, render_markdown
+from action_pack.renderer import render_copy_message, render_markdown, render_whatsapp_summary
 from action_pack.validators import validate_action_pack
 
 st.set_page_config(page_title="Public PDF Action Pack", page_icon="📄", layout="wide")
@@ -136,6 +136,9 @@ if result:
 
     st.subheader("Copy/share message")
     st.code(render_copy_message(pack), language="text")
+
+    with st.expander("WhatsApp / message summary"):
+        st.code(render_whatsapp_summary(pack), language=None)
 
     st.download_button("Download Markdown", markdown, file_name="action-pack.md", mime="text/markdown")
     st.download_button("Download JSON", pack.model_dump_json(indent=2), file_name="action-pack.json", mime="application/json")

@@ -110,3 +110,37 @@ def render_copy_message(pack: ActionPack) -> str:
     actions = "; ".join(action.action for action in pack.required_actions[:3]) or "review the document"
     dates = "; ".join(f"{d.label}: {d.date}" for d in pack.key_dates[:3]) or "no clear dates found"
     return f"I reviewed '{pack.title}'. Main actions: {actions}. Key dates: {dates}."
+
+
+def render_whatsapp_summary(pack: ActionPack) -> str:
+    """Generate a WhatsApp-friendly summary with emojis."""
+    lines = [f"*{pack.title}*"]
+    lines.append(f"Type: {pack.document_type.replace('_', ' ')} | Urgency: {'!' * pack.urgency_score}")
+
+    if pack.required_actions:
+        lines.append("")
+        lines.append("*Actions needed:*")
+        for action in pack.required_actions[:3]:
+            priority_icon = "!! " if action.priority == "high" else "! " if action.priority == "medium" else ""
+            lines.append(f"  {priority_icon}{action.action}")
+
+    if pack.key_dates:
+        lines.append("")
+        lines.append("*Key dates:*")
+        for date in pack.key_dates[:3]:
+            lines.append(f"  {date.label}: {date.date}")
+
+    if pack.costs:
+        lines.append("")
+        costs_str = "; ".join(f"{c.amount}" for c in pack.costs[:3])
+        lines.append(f"*Costs:* {costs_str}")
+
+    if pack.questions_to_ask:
+        lines.append("")
+        lines.append("*Ask about:*")
+        for q in pack.questions_to_ask[:2]:
+            lines.append(f"  - {q}")
+
+    lines.append("")
+    lines.append(f"_{pack.disclaimer[:80]}..._")
+    return "\n".join(lines)
