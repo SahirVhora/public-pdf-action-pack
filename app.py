@@ -13,6 +13,7 @@ import streamlit as st
 from action_pack.analyser import analyse_with_ai_or_fallback
 from action_pack.extractor import extract_text_from_upload
 from action_pack.fallback_analyser import analyse_without_ai
+from action_pack.presentation import action_label, source_is_duplicate
 from action_pack.renderer import render_copy_message, render_markdown
 from action_pack.validators import validate_action_pack
 
@@ -91,8 +92,10 @@ if result:
     st.subheader("Required actions")
     if pack.required_actions:
         for index, action in enumerate(pack.required_actions):
-            st.checkbox(f"{action.action} ({action.priority})", value=False, key=f"action_{index}_{action.action}")
-            st.caption(action.source_text)
+            st.checkbox(action_label(action), value=False, key=f"action_{index}_{action.action}")
+            if action.source_text and not source_is_duplicate(action):
+                with st.expander(f"Evidence for action {index + 1}"):
+                    st.write(action.source_text)
     else:
         st.write("No required actions found.")
 

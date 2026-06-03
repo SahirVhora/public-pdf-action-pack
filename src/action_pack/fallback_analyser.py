@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+import re
+
 from .classifier import classify_document
 from .schemas import ActionItem, ActionPack, ContactItem, CostItem, KeyDate, RiskItem
 from .text_utils import (
@@ -78,7 +80,7 @@ def _extract_required_actions(lines: list[str]) -> list[ActionItem]:
             actions.append(ActionItem(action="Return the signed client care letter", owner="Reader", deadline=_line_deadline(line), priority="high", source_text=line))
         elif "source of funds" in lower and ("questionnaire" in lower or "complete" in lower or "completed" in lower):
             actions.append(ActionItem(action="Complete the source of funds questionnaire", owner="Reader", deadline=_line_deadline(line), priority="high", source_text=line))
-        elif "payment" in lower and ("due" in lower or "pay" in lower):
+        elif _mentions_payment_request(lower):
             actions.append(ActionItem(action="Make the required payment", owner="Reader", deadline=_line_deadline(line), priority="high", source_text=line))
         elif "i must ask you to pay" in lower and "£" in line:
             amount = _first_cost(line)
@@ -189,6 +191,11 @@ def _audience_for(doc_type: str) -> list[str]:
 def _source_quotes(lines: list[str]) -> list[str]:
     useful = [line for line in lines if any(word in line.lower() for word in ["must", "please", "due", "by ", "contact", "payment", "return"])]
     return useful[:8]
+
+
+def _mentions_payment_request(lower_line: str) -> bool:
+    words = set(re.findall(r"[a-z]+", lower_line))
+    return ("payment" in words and ("due" in words or "pay" in words)) or "payable" in words
 
 
 def _line_deadline(line: str) -> str | None:

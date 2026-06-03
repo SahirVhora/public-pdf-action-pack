@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+from .presentation import source_is_duplicate
 from .schemas import ActionPack
 
 
@@ -19,8 +20,9 @@ def render_markdown(pack: ActionPack) -> str:
     if pack.required_actions:
         for action in pack.required_actions:
             deadline = f" by {action.deadline}" if action.deadline else ""
-            lines.append(f"- [{action.priority}] {action.action}{deadline} - owner: {action.owner}")
-            lines.append(f"  Source: {action.source_text}")
+            lines.append(f"- [{action.priority}] {action.action} - owner: {action.owner}{deadline}")
+            if action.source_text and not source_is_duplicate(action):
+                lines.append(f"  Evidence: {action.source_text}")
     else:
         lines.append("- No required actions found.")
     lines.append("")

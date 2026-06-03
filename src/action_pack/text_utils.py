@@ -45,7 +45,7 @@ def guess_title(text: str) -> str:
     skip_prefixes = ("dear ", "page ", "--- page", "sydney mitchell llp is", "date:", ":")
     candidates = [line for line in lines[:30] if len(line) > 8 and not line.lower().startswith(skip_prefixes)]
     for line in candidates:
-        if any(word in line.lower() for word in ["trip", "notice", "guidance", "policy", "reminder", "letter", "client care", "purchase"]):
+        if any(word in line.lower() for word in ["trip", "notice", "guidance", "policy", "reminder", "letter", "client care", "purchase", "buying a property", "joint names", "joint tenancy"]):
             return line[:90]
     return candidates[0][:90] if candidates else "Untitled document"
 

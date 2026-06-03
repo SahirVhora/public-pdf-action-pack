@@ -41,6 +41,14 @@ def test_cost_extraction_keeps_comma_amounts_intact():
     assert "£1" not in amounts
 
 
+def test_joint_tenants_repayment_sentence_not_treated_as_payment_action():
+    pack = analyse_without_ai("""
+BUYING A PROPERTY IN JOINT NAMES
+Where co-owners are going to be making unequal contributions to the repayment mortgage payments and household bills.
+""")
+    assert "Make the required payment" not in "\n".join(action.action for action in pack.required_actions)
+
+
 def test_client_care_return_section_extracts_specific_required_items():
     text = """
 Client Care Letter for 5 Horrell Road
