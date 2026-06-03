@@ -49,6 +49,14 @@ class RiskItem(BaseModel):
     source_text: str
 
 
+class DecisionItem(BaseModel):
+    decision: str
+    options: list[str] = Field(default_factory=list)
+    what_to_ask: str
+    priority: Priority = "medium"
+    source_text: str
+
+
 class ActionPack(BaseModel):
     title: str
     document_type: DocumentType
@@ -61,6 +69,7 @@ class ActionPack(BaseModel):
     costs: list[CostItem] = Field(default_factory=list)
     contacts: list[ContactItem] = Field(default_factory=list)
     risks: list[RiskItem] = Field(default_factory=list)
+    decisions_to_make: list[DecisionItem] = Field(default_factory=list)
     questions_to_ask: list[str] = Field(default_factory=list)
     urgency_score: int = Field(ge=1, le=5, default=2)
     confidence: Confidence = "medium"

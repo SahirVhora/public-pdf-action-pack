@@ -2,6 +2,7 @@ from pathlib import Path
 
 from action_pack.extractor import extract_text_from_path
 from action_pack.fallback_analyser import analyse_without_ai
+from action_pack.renderer import render_markdown
 from action_pack.text_utils import extract_costs_with_context, guess_title
 
 
@@ -66,3 +67,40 @@ Please return to: Sydney Mitchell LLP.
     assert "Pay £650.00 on account" in actions
     assert "Return one signed copy of the letter of instruction" in actions
     assert "Return documentary evidence of source of funds" in actions
+
+
+def test_property_joint_names_generates_decisions_to_make():
+    text = """
+BUYING A PROPERTY IN JOINT NAMES
+If you are buying a property with another person, you must consider how you will own the property.
+You can own as joint tenants or tenants in common.
+Where co-owners are making unequal contributions to the purchase price, mortgage payments or household bills, you should consider a declaration of trust.
+Joint tenancy affects what happens to the property when one owner dies and you should consider making wills.
+"""
+
+    pack = analyse_without_ai(text)
+
+    assert pack.document_type == "housing_property"
+    assert [decision.decision for decision in pack.decisions_to_make] == [
+        "How to own the property",
+        "Whether unequal contributions need protecting",
+        "Whether wills are needed",
+    ]
+    assert pack.decisions_to_make[0].options == ["Joint tenants", "Tenants in common"]
+    assert "declaration of trust" in pack.decisions_to_make[1].what_to_ask.lower()
+    assert pack.decisions_to_make[2].priority == "medium"
+
+
+def test_markdown_renders_decisions_to_make_table():
+    text = """
+BUYING A PROPERTY IN JOINT NAMES
+You can own as joint tenants or tenants in common.
+Where co-owners make unequal contributions, consider a declaration of trust.
+"""
+
+    markdown = render_markdown(analyse_without_ai(text))
+
+    assert "## Choices / decisions to make" in markdown
+    assert "| Decision | Options | What to ask | Priority |" in markdown
+    assert "How to own the property" in markdown
+    assert "Joint tenants; Tenants in common" in markdown

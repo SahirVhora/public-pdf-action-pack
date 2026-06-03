@@ -21,6 +21,9 @@ def validate_action_pack(pack: ActionPack) -> ValidationResult:
     for index, cost in enumerate(pack.costs, start=1):
         if not cost.source_text.strip():
             issues.append(f"Cost {index} is missing a source quote.")
+    for index, decision in enumerate(pack.decisions_to_make, start=1):
+        if not decision.source_text.strip():
+            issues.append(f"Decision {index} is missing a source quote.")
 
     if pack.urgency_score >= 4 and not pack.required_actions:
         warnings.append("Urgency is high but no required actions were extracted.")

@@ -116,6 +116,12 @@ if result:
     for question in pack.questions_to_ask:
         st.write(f"- {question}")
 
+    st.subheader("Choices / decisions to make")
+    if pack.decisions_to_make:
+        st.dataframe([decision.model_dump() for decision in pack.decisions_to_make], use_container_width=True)
+    else:
+        st.write("No explicit decisions found.")
+
     st.subheader("Copy/share message")
     st.code(render_copy_message(pack), language="text")
 

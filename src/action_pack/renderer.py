@@ -58,6 +58,17 @@ def render_markdown(pack: ActionPack) -> str:
         lines.append(f"- {question}")
     lines.append("")
 
+    lines.append("## Choices / decisions to make")
+    if pack.decisions_to_make:
+        lines.append("| Decision | Options | What to ask | Priority |")
+        lines.append("|---|---|---|---|")
+        for decision in pack.decisions_to_make:
+            options = "; ".join(decision.options) or "Not specified"
+            lines.append(f"| {_table_cell(decision.decision)} | {_table_cell(options)} | {_table_cell(decision.what_to_ask)} | {decision.priority} |")
+    else:
+        lines.append("- No explicit decisions found.")
+    lines.append("")
+
     lines.append("## Risks if ignored")
     if pack.risks:
         for risk in pack.risks:
@@ -71,6 +82,10 @@ def render_markdown(pack: ActionPack) -> str:
         lines.append(f"> {quote}")
     lines.append("")
     return "\n".join(lines)
+
+
+def _table_cell(value: str) -> str:
+    return value.replace("|", "\\|").replace("\n", " ").strip()
 
 
 def render_copy_message(pack: ActionPack) -> str:

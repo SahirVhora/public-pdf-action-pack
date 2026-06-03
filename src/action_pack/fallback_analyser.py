@@ -3,7 +3,7 @@ from __future__ import annotations
 import re
 
 from .classifier import classify_document
-from .schemas import ActionItem, ActionPack, ContactItem, CostItem, KeyDate, RiskItem
+from .schemas import ActionItem, ActionPack, ContactItem, CostItem, DecisionItem, KeyDate, RiskItem
 from .text_utils import (
     extract_costs_with_context,
     extract_dates_with_context,
@@ -48,6 +48,7 @@ def analyse_without_ai(text: str) -> ActionPack:
         costs=costs,
         contacts=contacts,
         risks=risks,
+        decisions_to_make=_decisions_for(doc_type, lines),
         questions_to_ask=_questions_for(doc_type, bool(costs), bool(dates), bool(required_actions)),
         urgency_score=urgency,
         confidence="medium",
@@ -148,6 +149,71 @@ def _documents_needed(lines: list[str]) -> list[str]:
         if "medical" in lower:
             docs.append("Medical information")
     return sorted(set(docs))
+
+
+def _decisions_for(doc_type: str, lines: list[str]) -> list[DecisionItem]:
+    if doc_type != "housing_property":
+        return []
+
+    full_text = "\n".join(lines).lower()
+    decisions: list[DecisionItem] = []
+
+    ownership_source = _first_line_containing(lines, ["joint tenants", "tenants in common"])
+    if ownership_source:
+        decisions.append(
+            DecisionItem(
+                decision="How to own the property",
+                options=["Joint tenants", "Tenants in common"],
+                what_to_ask="Ask which ownership option best protects your deposit, contribution, inheritance wishes, and future sale position.",
+                priority="high",
+                source_text=ownership_source,
+            )
+        )
+
+    contribution_source = _first_line_containing(lines, ["unequal contribution", "unequal contributions", "declaration of trust"])
+    if contribution_source or ("unequal" in full_text and "contribution" in full_text):
+        decisions.append(
+            DecisionItem(
+                decision="Whether unequal contributions need protecting",
+                options=["No extra protection", "Declaration of trust", "Tenants in common with defined shares"],
+                what_to_ask="Ask whether a declaration of trust is needed to record unequal deposits, mortgage payments, bills, or ownership shares.",
+                priority="high",
+                source_text=contribution_source or _first_line_containing(lines, ["unequal"]) or "Unequal contributions are mentioned.",
+            )
+        )
+
+    wills_source = _first_line_containing(lines, ["will", "wills", "dies", "death", "inheritance"])
+    if wills_source and any(word in full_text for word in ["joint tenant", "tenants in common", "property"]):
+        decisions.append(
+            DecisionItem(
+                decision="Whether wills are needed",
+                options=["Make or update wills", "Confirm existing wills are still suitable"],
+                what_to_ask="Ask whether your ownership choice changes what happens on death and whether both buyers should make or update wills before completion.",
+                priority="medium",
+                source_text=wills_source,
+            )
+        )
+
+    return _dedupe_decisions(decisions)
+
+
+def _first_line_containing(lines: list[str], needles: list[str]) -> str | None:
+    for line in lines:
+        lower = line.lower()
+        if any(needle in lower for needle in needles):
+            return line
+    return None
+
+
+def _dedupe_decisions(decisions: list[DecisionItem]) -> list[DecisionItem]:
+    seen: set[str] = set()
+    deduped: list[DecisionItem] = []
+    for decision in decisions:
+        key = decision.decision.lower()
+        if key not in seen:
+            seen.add(key)
+            deduped.append(decision)
+    return deduped[:8]
 
 
 def _questions_for(doc_type: str, has_costs: bool, has_dates: bool, has_actions: bool) -> list[str]:
