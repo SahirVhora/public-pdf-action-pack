@@ -163,3 +163,64 @@ Children should wear school uniform.
     assert "packed lunch" in markdown
     assert "water bottle" in markdown
     assert "school uniform" in markdown
+
+
+def test_council_recovery_notice_detects_high_urgency():
+    text = """
+COUNCIL TAX RECOVERY ACTION
+Dear Resident,
+Despite previous reminders, we have not received payment of your Council Tax.
+The outstanding amount of £1,247.50 must be paid by 20th June 2026 to avoid recovery action.
+If you do not pay by the deadline we may apply for a liability order through the magistrates court.
+This will add costs of £95.00 to your account.
+If you cannot pay, you must contact us immediately on 020 8825 7000.
+"""
+
+    pack = analyse_without_ai(text)
+
+    assert pack.document_type == "council_notice"
+    assert pack.urgency_score >= 4
+    assert any("pay" in action.action.lower() for action in pack.required_actions)
+    assert any("contact" in action.action.lower() for action in pack.required_actions)
+
+
+def test_council_notice_generates_consequence_risks():
+    text = """
+COUNCIL TAX FINAL NOTICE
+If payment is not received within 14 days we will begin recovery proceedings.
+This may result in bailiff action and additional costs.
+"""
+
+    pack = analyse_without_ai(text)
+
+    assert any("recovery" in risk.risk.lower() or "bailiff" in risk.risk.lower() for risk in pack.risks)
+    assert any("cost" in risk.risk.lower() for risk in pack.risks)
+
+
+def test_nhs_appointment_extracts_preparation():
+    text = """
+NHS Outpatient Appointment
+Your appointment at Solihull Hospital is on Monday 15th June 2026 at 10:30am.
+Please arrive 15 minutes before your appointment time.
+Bring your appointment letter and a list of any medications you are taking.
+You may be asked to provide a urine sample on arrival.
+The Cardiology department is on the first floor, follow the blue signs.
+"""
+
+    pack = analyse_without_ai(text)
+
+    assert pack.document_type == "nhs_guidance"
+    assert any("medication" in item.lower() for item in pack.child_checklist) or \
+           any("appointment letter" in item.lower() for item in pack.child_checklist)
+    assert any("nhs number" in q.lower() or "medical record" in q.lower() for q in pack.questions_to_ask)
+
+
+def test_markdown_hides_child_checklist_for_non_school():
+    text = """
+COUNCIL TAX REMINDER
+Please pay £500 by 1st July 2026.
+"""
+    markdown = render_markdown(analyse_without_ai(text))
+
+    assert "## Child checklist" in markdown
+    assert "- No checklist items found." in markdown

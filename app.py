@@ -127,7 +127,12 @@ if result:
         for item in pack.child_checklist:
             st.markdown(f"- {item}")
     else:
-        st.write("No child checklist items found.")
+        if pack.document_type == "school_letter":
+            st.write("No child checklist items found.")
+        elif pack.document_type == "nhs_guidance":
+            st.write("No preparation items found.")
+        else:
+            st.write("No checklist items found.")
 
     st.subheader("Copy/share message")
     st.code(render_copy_message(pack), language="text")

@@ -136,8 +136,14 @@ def _extract_risks(lines: list[str]) -> list[RiskItem]:
     risks: list[RiskItem] = []
     for line in lines:
         lower = line.lower()
-        if any(word in lower for word in ["avoid", "recovery action", "may not", "cannot", "deadline"]):
-            risks.append(RiskItem(risk=line.rstrip("."), severity="high" if "recovery action" in lower else "medium", source_text=line))
+        severity = "medium"
+        if any(word in lower for word in ["recovery action", "recovery proceeding", "bailiff", "liability order", "magistrates court"]):
+            severity = "high"
+        elif any(word in lower for word in ["avoid", "may not", "cannot", "deadline", "additional cost", "penalty"]):
+            severity = "medium"
+        else:
+            continue
+        risks.append(RiskItem(risk=line.rstrip("."), severity=severity, source_text=line))
     return risks[:5]
 
 
@@ -218,10 +224,22 @@ def _dedupe_decisions(decisions: list[DecisionItem]) -> list[DecisionItem]:
 
 
 def _child_checklist_for(doc_type: str, lines: list[str]) -> list[str]:
-    if doc_type != "school_letter":
-        return []
+    items: list[str] = []
 
-    full_text = "\n".join(lines).lower()
+    if doc_type == "school_letter":
+        items = _school_checklist_items(lines)
+    elif doc_type == "nhs_guidance":
+        items = _nhs_checklist_items(lines)
+
+    useful: list[str] = []
+    for item in items:
+        item = item.strip().rstrip(".").lstrip(": ")
+        if item and len(item) > 3 and item not in useful:
+            useful.append(item)
+    return useful[:12]
+
+
+def _school_checklist_items(lines: list[str]) -> list[str]:
     items: list[str] = []
 
     for needle_phrase in ["your child will need", "children will need", "pupils will need", "please bring", "your child should bring", "children should bring"]:
@@ -243,7 +261,6 @@ def _child_checklist_for(doc_type: str, lines: list[str]) -> list[str]:
         if "wear" in lower and "should" in lower:
             matched_wear = True
             after = lower.split("wear", 1)[1].strip().rstrip(".")
-            # Split if there's "and bring" appended
             for part in after.replace(" and bring ", "\n").replace(" and carry ", "\n").split("\n"):
                 part = part.strip().rstrip(".")
                 if part and len(part) > 3:
@@ -254,12 +271,29 @@ def _child_checklist_for(doc_type: str, lines: list[str]) -> list[str]:
             if after and not any(skip in after for skip in ["please", "the school"]):
                 items.append(after)
 
-    useful: list[str] = []
-    for item in items:
-        item = item.strip().rstrip(".").lstrip(": ")
-        if item and len(item) > 3 and item not in useful:
-            useful.append(item)
-    return useful[:12]
+    return items
+
+
+def _nhs_checklist_items(lines: list[str]) -> list[str]:
+    items: list[str] = []
+
+    for needle in ["bring your", "bring a", "bring an", "please bring", "you will need to bring"]:
+        for line in lines:
+            lower = line.lower()
+            if needle in lower:
+                after = lower.split(needle, 1)[1].strip().rstrip(".")
+                chunks = [c.strip().rstrip(".") for c in after.replace(", and ", "\n").replace(", ", "\n").replace(" and ", "\n").split("\n")]
+                for chunk in chunks:
+                    chunk = chunk.strip().rstrip(").").lstrip(": ")
+                    if chunk and len(chunk) > 2 and not any(skip in chunk for skip in ["please", "if you"]):
+                        items.append(chunk)
+
+    for line in lines:
+        lower = line.lower()
+        if "arrive" in lower and ("before" in lower or "minutes" in lower):
+            items.append(line.strip().rstrip("."))
+
+    return items
 
 
 def _questions_for(doc_type: str, has_costs: bool, has_dates: bool, has_actions: bool, text: str = "") -> list[str]:

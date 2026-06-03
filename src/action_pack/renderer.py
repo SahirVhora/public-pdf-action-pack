@@ -74,7 +74,12 @@ def render_markdown(pack: ActionPack) -> str:
         for item in pack.child_checklist:
             lines.append(f"- {item}")
     else:
-        lines.append("- No child checklist items found.")
+        if pack.document_type == "school_letter":
+            lines.append("- No child checklist items found.")
+        elif pack.document_type == "nhs_guidance":
+            lines.append("- No preparation items found.")
+        else:
+            lines.append("- No checklist items found.")
     lines.append("")
 
     lines.append("## Risks if ignored")

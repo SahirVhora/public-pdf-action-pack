@@ -44,10 +44,19 @@ def guess_title(text: str) -> str:
     lines = split_lines(text)
     skip_prefixes = ("dear ", "page ", "--- page", "sydney mitchell llp is", "date:", ":")
     candidates = [line for line in lines[:30] if len(line) > 8 and not line.lower().startswith(skip_prefixes)]
+    title_keywords = [
+        "trip", "notice", "guidance", "policy", "reminder", "letter", "client care",
+        "purchase", "buying a property", "joint names", "joint tenancy",
+        "appointment", "appointment", "clinic", "hospital", "surgery",
+        "recovery action", "final notice", "council tax",
+        "planning", "benefit", "eligibility",
+    ]
     for line in candidates:
-        if any(word in line.lower() for word in ["trip", "notice", "guidance", "policy", "reminder", "letter", "client care", "purchase", "buying a property", "joint names", "joint tenancy"]):
+        if any(word in line.lower() for word in title_keywords):
             return line[:90]
-    return candidates[0][:90] if candidates else "Untitled document"
+    # Fallback: prefer shorter lines (titles are usually brief)
+    short = sorted([c for c in candidates if len(c) < 80], key=len)
+    return short[0][:90] if short else (candidates[0][:90] if candidates else "Untitled document")
 
 
 def infer_deadline_label(line: str) -> str:
