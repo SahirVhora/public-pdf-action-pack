@@ -11,7 +11,7 @@ MONTHS = {
 
 _DATE_RE = re.compile(r"\b(\d{1,2})(?:st|nd|rd|th)?\s+(January|February|March|April|May|June|July|August|September|October|November|December|Jan|Feb|Mar|Apr|Jun|Jul|Aug|Sep|Sept|Oct|Nov|Dec)\s+(\d{4})\b", re.I)
 _EMAIL_RE = re.compile(r"[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}", re.I)
-_COST_RE = re.compile(r"£\s?\d+(?:\.\d{2})?")
+_COST_RE = re.compile(r"£\s?\d{1,3}(?:,\d{3})*(?:\.\d{2})?|£\s?\d+(?:\.\d{2})?")
 
 
 def normalise_spaces(text: str) -> str:
@@ -42,11 +42,12 @@ def extract_costs_with_context(text: str) -> list[tuple[str, str]]:
 
 def guess_title(text: str) -> str:
     lines = split_lines(text)
-    for line in lines[:8]:
-        if len(line) > 8 and not line.lower().startswith(("dear ", "page ", "--- page")):
-            if any(word in line.lower() for word in ["trip", "notice", "guidance", "policy", "reminder", "letter"]):
-                return line[:90]
-    return lines[0][:90] if lines else "Untitled document"
+    skip_prefixes = ("dear ", "page ", "--- page", "sydney mitchell llp is", "date:", ":")
+    candidates = [line for line in lines[:30] if len(line) > 8 and not line.lower().startswith(skip_prefixes)]
+    for line in candidates:
+        if any(word in line.lower() for word in ["trip", "notice", "guidance", "policy", "reminder", "letter", "client care", "purchase"]):
+            return line[:90]
+    return candidates[0][:90] if candidates else "Untitled document"
 
 
 def infer_deadline_label(line: str) -> str:

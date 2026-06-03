@@ -55,18 +55,68 @@ def analyse_without_ai(text: str) -> ActionPack:
 
 def _extract_required_actions(lines: list[str]) -> list[ActionItem]:
     actions: list[ActionItem] = []
+    actions.extend(_extract_return_section_actions(lines))
     for line in lines:
         lower = line.lower()
         if "return" in lower and "consent" in lower:
             actions.append(ActionItem(action="Return the consent form", owner="Parent/guardian", deadline=_line_deadline(line), priority="high", source_text=line))
+        elif ("cheque" in lower or "bank transfer" in lower or "card payment" in lower) and "£" in line:
+            amount = _first_cost(line)
+            label = f"Pay {amount} on account" if amount else "Make the requested payment"
+            actions.append(ActionItem(action=label, owner="Reader", deadline=_line_deadline(line), priority="high", source_text=line))
+        elif "one signed copy of letter of instruction" in lower:
+            actions.append(ActionItem(action="Return one signed copy of the letter of instruction", owner="Reader", deadline=_line_deadline(line), priority="high", source_text=line))
+        elif "completed and signed conveyancing instruction" in lower:
+            actions.append(ActionItem(action="Return the completed and signed Conveyancing Instruction form", owner="Reader", deadline=_line_deadline(line), priority="high", source_text=line))
+        elif "completed joint purchasers" in lower:
+            actions.append(ActionItem(action="Return the completed Joint Purchasers Information form", owner="Reader", deadline=_line_deadline(line), priority="high", source_text=line))
+        elif "proof of identity" in lower and "proof of address" in lower:
+            actions.append(ActionItem(action="Provide original proof of identity and proof of address", owner="Reader", deadline=_line_deadline(line), priority="high", source_text=line))
+        elif "documentary evidence of source of funds" in lower:
+            actions.append(ActionItem(action="Return documentary evidence of source of funds", owner="Reader", deadline=_line_deadline(line), priority="high", source_text=line))
+        elif "signed client care" in lower or "client care letter" in lower and "signed" in lower:
+            actions.append(ActionItem(action="Return the signed client care letter", owner="Reader", deadline=_line_deadline(line), priority="high", source_text=line))
+        elif "source of funds" in lower and ("questionnaire" in lower or "complete" in lower or "completed" in lower):
+            actions.append(ActionItem(action="Complete the source of funds questionnaire", owner="Reader", deadline=_line_deadline(line), priority="high", source_text=line))
         elif "payment" in lower and ("due" in lower or "pay" in lower):
             actions.append(ActionItem(action="Make the required payment", owner="Reader", deadline=_line_deadline(line), priority="high", source_text=line))
+        elif "i must ask you to pay" in lower and "£" in line:
+            amount = _first_cost(line)
+            actions.append(ActionItem(action=f"Pay {amount} on account" if amount else line.rstrip("."), owner="Reader", deadline=_line_deadline(line), priority="high", source_text=line))
         elif lower.startswith("you must") or " must " in lower:
             action = line.rstrip(".")
             actions.append(ActionItem(action=action[0].upper() + action[1:], owner="Reader", deadline=_line_deadline(line), priority="high", source_text=line))
         elif "please" in lower and any(word in lower for word in ["return", "complete", "bring", "contact", "pay"]):
             actions.append(ActionItem(action=line.rstrip("."), owner="Reader", deadline=_line_deadline(line), priority="medium", source_text=line))
     return _dedupe_actions(actions)
+
+
+def _extract_return_section_actions(lines: list[str]) -> list[ActionItem]:
+    marker_index = next((i for i, line in enumerate(lines) if "please return to us the following" in line.lower()), None)
+    if marker_index is None:
+        return []
+
+    actions: list[ActionItem] = []
+    for line in lines[marker_index + 1 : marker_index + 25]:
+        lower = line.lower().strip()
+        if lower.startswith("please return to:") or lower == "our bank details":
+            break
+        if lower in {"", "•"} or lower.rstrip(".").isdigit():
+            continue
+        if "cheque" in lower or "bank transfer" in lower or "card payment" in lower:
+            amount = _first_cost(line)
+            actions.append(ActionItem(action=f"Pay {amount} on account" if amount else "Make the requested payment", owner="Reader", priority="high", source_text=line))
+        elif "one signed copy of letter of instruction" in lower:
+            actions.append(ActionItem(action="Return one signed copy of the letter of instruction", owner="Reader", priority="high", source_text=line))
+        elif "completed and signed conveyancing instruction" in lower:
+            actions.append(ActionItem(action="Return the completed and signed Conveyancing Instruction form", owner="Reader", priority="high", source_text=line))
+        elif "completed joint purchasers" in lower:
+            actions.append(ActionItem(action="Return the completed Joint Purchasers Information form", owner="Reader", priority="high", source_text=line))
+        elif "proof of identity" in lower and "proof of address" in lower:
+            actions.append(ActionItem(action="Provide original proof of identity and proof of address", owner="Reader", priority="high", source_text=line))
+        elif "documentary evidence of source of funds" in lower:
+            actions.append(ActionItem(action="Return documentary evidence of source of funds", owner="Reader", priority="high", source_text=line))
+    return actions
 
 
 def _extract_optional_actions(lines: list[str]) -> list[ActionItem]:
@@ -147,6 +197,12 @@ def _line_deadline(line: str) -> str | None:
     return dates[0][0] if dates else None
 
 
+def _first_cost(line: str) -> str | None:
+    from .text_utils import extract_costs_with_context
+    costs = extract_costs_with_context(line)
+    return costs[0][0] if costs else None
+
+
 def _dedupe_actions(actions: list[ActionItem]) -> list[ActionItem]:
     seen: set[str] = set()
     deduped: list[ActionItem] = []
@@ -155,4 +211,4 @@ def _dedupe_actions(actions: list[ActionItem]) -> list[ActionItem]:
         if key not in seen:
             seen.add(key)
             deduped.append(action)
-    return deduped[:8]
+    return deduped[:15]
