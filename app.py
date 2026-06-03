@@ -144,3 +144,5 @@ if result:
         st.markdown(markdown)
     with st.expander("Extracted source text"):
         st.text(text[:50000])
+
+    st.caption(pack.disclaimer)

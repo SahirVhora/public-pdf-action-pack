@@ -72,6 +72,9 @@ class ActionPack(BaseModel):
     decisions_to_make: list[DecisionItem] = Field(default_factory=list)
     child_checklist: list[str] = Field(default_factory=list)
     questions_to_ask: list[str] = Field(default_factory=list)
+    disclaimer: str = Field(
+        default="This is an automated summary tool, not legal, financial, or medical advice. Always check the original document and consult a qualified professional before making decisions.",
+    )
     urgency_score: int = Field(ge=1, le=5, default=2)
     confidence: Confidence = "medium"
     source_quotes: list[str] = Field(default_factory=list)

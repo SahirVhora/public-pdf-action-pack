@@ -94,6 +94,11 @@ def render_markdown(pack: ActionPack) -> str:
     for quote in pack.source_quotes or ["No source quotes captured."]:
         lines.append(f"> {quote}")
     lines.append("")
+
+    lines.append("---")
+    lines.append(f"*{pack.disclaimer}*")
+    lines.append("")
+
     return "\n".join(lines)
 
 
