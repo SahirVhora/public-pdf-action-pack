@@ -1,0 +1,158 @@
+from __future__ import annotations
+
+from .classifier import classify_document
+from .schemas import ActionItem, ActionPack, ContactItem, CostItem, KeyDate, RiskItem
+from .text_utils import (
+    extract_costs_with_context,
+    extract_dates_with_context,
+    extract_emails_with_context,
+    guess_title,
+    infer_deadline_label,
+    split_lines,
+)
+
+
+def analyse_without_ai(text: str) -> ActionPack:
+    doc_type = classify_document(text)
+    title = guess_title(text)
+    lines = split_lines(text)
+    dates = [KeyDate(date=date, label=infer_deadline_label(ctx), source_text=ctx) for date, ctx in extract_dates_with_context(text)]
+    costs = [CostItem(amount=amount, label="Amount mentioned", source_text=ctx) for amount, ctx in extract_costs_with_context(text)]
+    contacts = [ContactItem(label="Email", value=email, source_text=ctx) for email, ctx in extract_emails_with_context(text)]
+
+    required_actions = _extract_required_actions(lines)
+    optional_actions = _extract_optional_actions(lines)
+    risks = _extract_risks(lines)
+    summary = _summary_for(doc_type, title, bool(required_actions), bool(dates), bool(costs))
+
+    urgency = 2
+    if required_actions:
+        urgency += 1
+    if dates:
+        urgency += 1
+    if any(word in text.lower() for word in ["avoid", "must", "urgent", "deadline", "recovery action"]):
+        urgency += 1
+    urgency = min(5, urgency)
+
+    return ActionPack(
+        title=title,
+        document_type=doc_type,
+        audience=_audience_for(doc_type),
+        plain_english_summary=summary,
+        key_dates=dates,
+        required_actions=required_actions,
+        optional_actions=optional_actions,
+        documents_needed=_documents_needed(lines),
+        costs=costs,
+        contacts=contacts,
+        risks=risks,
+        questions_to_ask=_questions_for(doc_type, bool(costs), bool(dates), bool(required_actions)),
+        urgency_score=urgency,
+        confidence="medium",
+        source_quotes=_source_quotes(lines),
+    )
+
+
+def _extract_required_actions(lines: list[str]) -> list[ActionItem]:
+    actions: list[ActionItem] = []
+    for line in lines:
+        lower = line.lower()
+        if "return" in lower and "consent" in lower:
+            actions.append(ActionItem(action="Return the consent form", owner="Parent/guardian", deadline=_line_deadline(line), priority="high", source_text=line))
+        elif "payment" in lower and ("due" in lower or "pay" in lower):
+            actions.append(ActionItem(action="Make the required payment", owner="Reader", deadline=_line_deadline(line), priority="high", source_text=line))
+        elif lower.startswith("you must") or " must " in lower:
+            action = line.rstrip(".")
+            actions.append(ActionItem(action=action[0].upper() + action[1:], owner="Reader", deadline=_line_deadline(line), priority="high", source_text=line))
+        elif "please" in lower and any(word in lower for word in ["return", "complete", "bring", "contact", "pay"]):
+            actions.append(ActionItem(action=line.rstrip("."), owner="Reader", deadline=_line_deadline(line), priority="medium", source_text=line))
+    return _dedupe_actions(actions)
+
+
+def _extract_optional_actions(lines: list[str]) -> list[ActionItem]:
+    actions: list[ActionItem] = []
+    for line in lines:
+        lower = line.lower()
+        if "if you" in lower and any(word in lower for word in ["cannot", "need", "would like"]):
+            actions.append(ActionItem(action=line.rstrip("."), owner="Reader", priority="medium", source_text=line))
+    return _dedupe_actions(actions)
+
+
+def _extract_risks(lines: list[str]) -> list[RiskItem]:
+    risks: list[RiskItem] = []
+    for line in lines:
+        lower = line.lower()
+        if any(word in lower for word in ["avoid", "recovery action", "may not", "cannot", "deadline"]):
+            risks.append(RiskItem(risk=line.rstrip("."), severity="high" if "recovery action" in lower else "medium", source_text=line))
+    return risks[:5]
+
+
+def _documents_needed(lines: list[str]) -> list[str]:
+    docs = []
+    for line in lines:
+        lower = line.lower()
+        if "consent form" in lower:
+            docs.append("Consent form")
+        if "medical" in lower:
+            docs.append("Medical information")
+    return sorted(set(docs))
+
+
+def _questions_for(doc_type: str, has_costs: bool, has_dates: bool, has_actions: bool) -> list[str]:
+    questions = []
+    if has_costs:
+        questions.append("Is financial support or an alternative payment option available?")
+    if has_dates:
+        questions.append("Can you confirm the exact deadline and whether late submissions are accepted?")
+    if has_actions:
+        questions.append("Is there anything else I need to submit or bring?")
+    if doc_type == "school_letter":
+        questions.append("What should my child bring on the day, and what time will they return?")
+    elif doc_type == "council_notice":
+        questions.append("What happens if I cannot meet the deadline?")
+    return questions[:5]
+
+
+def _summary_for(doc_type: str, title: str, has_actions: bool, has_dates: bool, has_costs: bool) -> list[str]:
+    readable = doc_type.replace("_", " ")
+    summary = [f"This appears to be a {readable}: {title}."]
+    if has_actions:
+        summary.append("There are actions the reader should complete.")
+    if has_dates:
+        summary.append("The document includes important dates or deadlines.")
+    if has_costs:
+        summary.append("The document mentions a payment or cost.")
+    return summary
+
+
+def _audience_for(doc_type: str) -> list[str]:
+    return {
+        "school_letter": ["Parents", "Guardians", "Pupils"],
+        "council_notice": ["Residents", "Council service users"],
+        "nhs_guidance": ["Patients", "Carers"],
+        "housing_property": ["Buyers", "Renters", "Homeowners"],
+        "hr_policy": ["Employees", "Managers"],
+        "government_guidance": ["Citizens", "Applicants"],
+    }.get(doc_type, ["Readers"])
+
+
+def _source_quotes(lines: list[str]) -> list[str]:
+    useful = [line for line in lines if any(word in line.lower() for word in ["must", "please", "due", "by ", "contact", "payment", "return"])]
+    return useful[:8]
+
+
+def _line_deadline(line: str) -> str | None:
+    from .text_utils import extract_dates_with_context
+    dates = extract_dates_with_context(line)
+    return dates[0][0] if dates else None
+
+
+def _dedupe_actions(actions: list[ActionItem]) -> list[ActionItem]:
+    seen: set[str] = set()
+    deduped: list[ActionItem] = []
+    for action in actions:
+        key = action.action.lower()
+        if key not in seen:
+            seen.add(key)
+            deduped.append(action)
+    return deduped[:8]
