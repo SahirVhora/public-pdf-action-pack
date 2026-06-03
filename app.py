@@ -81,67 +81,101 @@ if result:
         st.info(warning)
 
     col1, col2, col3, col4 = st.columns(4)
-    col1.metric("Urgency", f"{pack.urgency_score}/5")
+    urgency_color = "red" if pack.urgency_score >= 4 else "orange" if pack.urgency_score >= 3 else "green"
+    col1.metric("Urgency", f"{pack.urgency_score}/5", delta_color="off")
+    col1.markdown(f":{urgency_color}[{'❗' * pack.urgency_score}]")
     col2.metric("Confidence", pack.confidence)
     col3.metric("Document type", pack.document_type.replace("_", " "))
     col4.metric("Pages detected", text.count("--- Page ") or "Text")
 
-    st.subheader(pack.title)
-    st.write(" ".join(pack.plain_english_summary))
+    st.divider()
 
-    st.subheader("Required actions")
-    if pack.required_actions:
-        for index, action in enumerate(pack.required_actions):
-            st.checkbox(action_label(action), value=False, key=f"action_{index}_{action.action}")
-            if action.source_text and not source_is_duplicate(action):
-                with st.expander(f"Evidence for action {index + 1}"):
-                    st.write(action.source_text)
-    else:
-        st.write("No required actions found.")
+    with st.container(border=True):
+        st.markdown(f"### {pack.title}")
+        st.markdown(" ".join(pack.plain_english_summary))
 
-    st.subheader("Key dates")
-    if pack.key_dates:
-        st.dataframe([item.model_dump() for item in pack.key_dates], use_container_width=True)
-    else:
-        st.write("No key dates found.")
+    tab1, tab2, tab3, tab4 = st.tabs(["Actions & Dates", "Costs & Contacts", "Decisions & Checklist", "Share & Export"])
 
-    st.subheader("Costs and contacts")
-    left, right = st.columns(2)
-    with left:
-        st.write([cost.model_dump() for cost in pack.costs] or "No costs found.")
-    with right:
-        st.write([contact.model_dump() for contact in pack.contacts] or "No contacts found.")
-
-    st.subheader("Questions to ask")
-    for question in pack.questions_to_ask:
-        st.write(f"- {question}")
-
-    st.subheader("Choices / decisions to make")
-    if pack.decisions_to_make:
-        st.dataframe([decision.model_dump() for decision in pack.decisions_to_make], use_container_width=True)
-    else:
-        st.write("No explicit decisions found.")
-
-    st.subheader("Child checklist")
-    if pack.child_checklist:
-        for item in pack.child_checklist:
-            st.markdown(f"- {item}")
-    else:
-        if pack.document_type == "school_letter":
-            st.write("No child checklist items found.")
-        elif pack.document_type == "nhs_guidance":
-            st.write("No preparation items found.")
+    with tab1:
+        st.subheader("Required actions")
+        if pack.required_actions:
+            for index, action in enumerate(pack.required_actions):
+                st.checkbox(action_label(action), value=False, key=f"action_{index}_{action.action}")
+                if action.source_text and not source_is_duplicate(action):
+                    with st.expander(f"Evidence for action {index + 1}"):
+                        st.caption(action.source_text)
         else:
-            st.write("No checklist items found.")
+            st.write("No required actions found.")
 
-    st.subheader("Copy/share message")
-    st.code(render_copy_message(pack), language="text")
+        st.subheader("Key dates")
+        if pack.key_dates:
+            st.dataframe([item.model_dump() for item in pack.key_dates], use_container_width=True)
+        else:
+            st.write("No key dates found.")
 
-    with st.expander("WhatsApp / message summary"):
+    with tab2:
+        st.subheader("Costs")
+        if pack.costs:
+            for cost in pack.costs:
+                st.markdown(f"- **{cost.amount}**: {cost.label}")
+                if cost.source_text:
+                    st.caption(cost.source_text)
+        else:
+            st.write("No costs found.")
+
+        st.subheader("Contacts")
+        if pack.contacts:
+            for contact in pack.contacts:
+                st.markdown(f"- **{contact.label}**: {contact.value}")
+                if contact.source_text:
+                    st.caption(contact.source_text)
+        else:
+            st.write("No contacts found.")
+
+        st.subheader("Risks if ignored")
+        if pack.risks:
+            for risk in pack.risks:
+                icon = "🔴" if risk.severity == "high" else "🟡"
+                st.markdown(f"- {icon} {risk.risk}")
+        else:
+            st.write("No explicit risks found.")
+
+    with tab3:
+        st.subheader("Questions to ask")
+        for question in pack.questions_to_ask:
+            st.markdown(f"- {question}")
+
+        st.subheader("Choices / decisions to make")
+        if pack.decisions_to_make:
+            st.dataframe([decision.model_dump() for decision in pack.decisions_to_make], use_container_width=True)
+        else:
+            st.write("No explicit decisions found.")
+
+        st.subheader("Child checklist")
+        if pack.child_checklist:
+            for item in pack.child_checklist:
+                st.markdown(f"- {item}")
+        else:
+            if pack.document_type == "school_letter":
+                st.write("No child checklist items found.")
+            elif pack.document_type == "nhs_guidance":
+                st.write("No preparation items found.")
+            else:
+                st.write("No checklist items found.")
+
+    with tab4:
+        st.subheader("Copy / share")
+        st.caption("Short summary:")
+        st.code(render_copy_message(pack), language="text")
+
+        st.caption("WhatsApp / message ready:")
         st.code(render_whatsapp_summary(pack), language=None)
 
-    st.download_button("Download Markdown", markdown, file_name="action-pack.md", mime="text/markdown")
-    st.download_button("Download JSON", pack.model_dump_json(indent=2), file_name="action-pack.json", mime="application/json")
+        col_dl1, col_dl2 = st.columns(2)
+        with col_dl1:
+            st.download_button("Download Markdown", markdown, file_name="action-pack.md", mime="text/markdown")
+        with col_dl2:
+            st.download_button("Download JSON", pack.model_dump_json(indent=2), file_name="action-pack.json", mime="application/json")
 
     with st.expander("Full Markdown output"):
         st.markdown(markdown)
