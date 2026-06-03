@@ -70,3 +70,27 @@ def infer_deadline_label(line: str) -> str:
     if "return" in lower:
         return "Return deadline"
     return "Important date"
+
+
+_PAGE_MARKER = re.compile(r"--- Page (\d+) ---", re.I)
+
+
+def page_for_line(text: str, line: str) -> int | None:
+    """Return the page number for a given line of source text, or None if no page markers found."""
+    marker_pages: list[tuple[int, int]] = []  # (char_position, page_number)
+    for match in _PAGE_MARKER.finditer(text):
+        marker_pages.append((match.start(), int(match.group(1))))
+    if not marker_pages:
+        return None
+    # Find the position of the line in the text
+    line_pos = text.find(line)
+    if line_pos < 0:
+        return None
+    # Find the closest page marker before this line
+    current_page = 1
+    for marker_pos, page_num in marker_pages:
+        if marker_pos < line_pos:
+            current_page = page_num
+        else:
+            break
+    return current_page

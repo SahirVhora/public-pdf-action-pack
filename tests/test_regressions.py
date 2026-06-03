@@ -224,3 +224,38 @@ Please pay £500 by 1st July 2026.
 
     assert "## Child checklist" in markdown
     assert "- No checklist items found." in markdown
+
+
+def test_multipage_pdf_actions_get_page_numbers():
+    text = """--- Page 1 ---
+Client Care Letter
+Please return the signed copy by 1st June.
+--- Page 2 ---
+Payment of £650.00 must be made by bank transfer.
+--- Page 3 ---
+Contact us at solicitor@example.com for any questions.
+"""
+
+    pack = analyse_without_ai(text)
+
+    return_action = next(a for a in pack.required_actions if "signed" in a.action.lower())
+    assert "Page 1" in return_action.source_text
+
+    payment_action = next(a for a in pack.required_actions if "pay" in a.action.lower())
+    assert "Page 2" in payment_action.source_text
+
+    for cost in pack.costs:
+        assert "Page 2" in cost.source_text
+
+    for contact in pack.contacts:
+        assert "Page 3" in contact.source_text
+
+
+def test_no_page_marker_leaves_source_unchanged():
+    text = """Return the consent form by Friday.
+Payment of £18.50 is required.
+"""
+    pack = analyse_without_ai(text)
+
+    for action in pack.required_actions:
+        assert "Page" not in action.source_text

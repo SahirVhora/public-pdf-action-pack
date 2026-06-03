@@ -10,6 +10,7 @@ from .text_utils import (
     extract_emails_with_context,
     guess_title,
     infer_deadline_label,
+    page_for_line,
     split_lines,
 )
 
@@ -41,14 +42,14 @@ def analyse_without_ai(text: str) -> ActionPack:
         document_type=doc_type,
         audience=_audience_for(doc_type),
         plain_english_summary=summary,
-        key_dates=dates,
-        required_actions=required_actions,
-        optional_actions=optional_actions,
+        key_dates=_annotate_page_numbers(dates, text),
+        required_actions=_annotate_page_numbers(required_actions, text),
+        optional_actions=_annotate_page_numbers(optional_actions, text),
         documents_needed=_documents_needed(lines),
-        costs=costs,
-        contacts=contacts,
-        risks=risks,
-        decisions_to_make=_decisions_for(doc_type, lines),
+        costs=_annotate_page_numbers(costs, text),
+        contacts=_annotate_page_numbers(contacts, text),
+        risks=_annotate_page_numbers(risks, text),
+        decisions_to_make=_annotate_page_numbers(_decisions_for(doc_type, lines), text),
         child_checklist=_child_checklist_for(doc_type, lines),
         questions_to_ask=_questions_for(doc_type, bool(costs), bool(dates), bool(required_actions), text),
         urgency_score=urgency,
@@ -375,3 +376,16 @@ def _dedupe_actions(actions: list[ActionItem]) -> list[ActionItem]:
             seen.add(key)
             deduped.append(action)
     return deduped[:15]
+
+
+from typing import TypeVar
+
+_T = TypeVar("_T", ActionItem, KeyDate, CostItem, ContactItem, RiskItem, DecisionItem)
+
+
+def _annotate_page_numbers(items: list[_T], text: str) -> list[_T]:
+    for item in items:
+        page = page_for_line(text, item.source_text)
+        if page is not None:
+            item.source_text = f"Page {page}: {item.source_text}"
+    return items
