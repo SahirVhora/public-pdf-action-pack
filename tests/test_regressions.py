@@ -104,3 +104,62 @@ Where co-owners make unequal contributions, consider a declaration of trust.
     assert "| Decision | Options | What to ask | Priority |" in markdown
     assert "How to own the property" in markdown
     assert "Joint tenants; Tenants in common" in markdown
+
+
+def test_school_trip_letter_generates_child_checklist():
+    text = """
+Year 4 School Trip to Warwick Castle
+Dear Parents and Guardians,
+We are pleased to announce a school trip to Warwick Castle on Friday 20th June 2026.
+The cost of the trip is £18.50 per pupil, payable by Friday 6th June.
+Please complete and return the attached consent form by the same date.
+Your child will need: a packed lunch, a water bottle, comfortable walking shoes, and a waterproof coat.
+Children should wear school uniform and bring a small backpack (no large bags).
+The coach will depart at 8:45am and return by 3:30pm.
+If your child requires any medication during the trip, please inform the school office.
+"""
+
+    pack = analyse_without_ai(text)
+
+    assert pack.document_type == "school_letter"
+    checklist_text = " ".join(pack.child_checklist)
+    assert "packed lunch" in checklist_text
+    assert "water bottle" in checklist_text
+    assert "waterproof coat" in checklist_text
+    assert "comfortable walking shoes" in checklist_text
+    assert "school uniform" in checklist_text
+    assert "small backpack" in checklist_text
+
+
+def test_school_trip_generates_better_questions():
+    text = """
+Year 4 School Trip to Warwick Castle
+Cost: £18.50 per pupil, payable by Friday 6th June 2026.
+Please return the consent form by Friday 6th June.
+Your child will need a packed lunch and a water bottle.
+The coach departs at 8:45am and returns by 3:30pm.
+If your child requires medication during the trip, please contact the school.
+"""
+
+    pack = analyse_without_ai(text)
+
+    questions = pack.questions_to_ask
+    assert any("financial" in q.lower() for q in questions)
+    assert any("late" in q.lower() or "deadline" in q.lower() for q in questions)
+    assert any("bring" in q.lower() for q in questions)
+    assert any("return" in q.lower() or "time" in q.lower() for q in questions)
+    assert any("medication" in q.lower() or "medical" in q.lower() for q in questions)
+
+
+def test_markdown_renders_child_checklist():
+    text = """
+Year 4 School Trip
+Your child will need: a packed lunch, a water bottle.
+Children should wear school uniform.
+"""
+    markdown = render_markdown(analyse_without_ai(text))
+
+    assert "## Child checklist" in markdown
+    assert "packed lunch" in markdown
+    assert "water bottle" in markdown
+    assert "school uniform" in markdown

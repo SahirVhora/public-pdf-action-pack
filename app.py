@@ -122,6 +122,13 @@ if result:
     else:
         st.write("No explicit decisions found.")
 
+    st.subheader("Child checklist")
+    if pack.child_checklist:
+        for item in pack.child_checklist:
+            st.markdown(f"- {item}")
+    else:
+        st.write("No child checklist items found.")
+
     st.subheader("Copy/share message")
     st.code(render_copy_message(pack), language="text")
 

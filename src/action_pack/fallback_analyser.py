@@ -49,7 +49,8 @@ def analyse_without_ai(text: str) -> ActionPack:
         contacts=contacts,
         risks=risks,
         decisions_to_make=_decisions_for(doc_type, lines),
-        questions_to_ask=_questions_for(doc_type, bool(costs), bool(dates), bool(required_actions)),
+        child_checklist=_child_checklist_for(doc_type, lines),
+        questions_to_ask=_questions_for(doc_type, bool(costs), bool(dates), bool(required_actions), text),
         urgency_score=urgency,
         confidence="medium",
         source_quotes=_source_quotes(lines),
@@ -216,7 +217,52 @@ def _dedupe_decisions(decisions: list[DecisionItem]) -> list[DecisionItem]:
     return deduped[:8]
 
 
-def _questions_for(doc_type: str, has_costs: bool, has_dates: bool, has_actions: bool) -> list[str]:
+def _child_checklist_for(doc_type: str, lines: list[str]) -> list[str]:
+    if doc_type != "school_letter":
+        return []
+
+    full_text = "\n".join(lines).lower()
+    items: list[str] = []
+
+    for needle_phrase in ["your child will need", "children will need", "pupils will need", "please bring", "your child should bring", "children should bring"]:
+        for line in lines:
+            lower = line.lower()
+            if needle_phrase in lower:
+                after = lower.split(needle_phrase, 1)[1]
+                after = after.lstrip(": ").rstrip(".")
+                chunks = [c.strip().rstrip(".") for c in after.replace(",", "\n").replace(" and ", "\n").replace(";", "\n").split("\n")]
+                for chunk in chunks:
+                    chunk = chunk.strip().rstrip(").").lstrip(": ")
+                    if chunk and len(chunk) > 2 and not any(skip in chunk for skip in ["please", "the school", "if your", "inform", "medication", "no large"]):
+                        items.append(chunk)
+                break
+
+    for line in lines:
+        lower = line.lower()
+        matched_wear = False
+        if "wear" in lower and "should" in lower:
+            matched_wear = True
+            after = lower.split("wear", 1)[1].strip().rstrip(".")
+            # Split if there's "and bring" appended
+            for part in after.replace(" and bring ", "\n").replace(" and carry ", "\n").split("\n"):
+                part = part.strip().rstrip(".")
+                if part and len(part) > 3:
+                    items.append(part)
+
+        if not matched_wear and ("bring a" in lower or "bring an" in lower):
+            after = lower.split("bring", 1)[1].strip().rstrip(".)")
+            if after and not any(skip in after for skip in ["please", "the school"]):
+                items.append(after)
+
+    useful: list[str] = []
+    for item in items:
+        item = item.strip().rstrip(".").lstrip(": ")
+        if item and len(item) > 3 and item not in useful:
+            useful.append(item)
+    return useful[:12]
+
+
+def _questions_for(doc_type: str, has_costs: bool, has_dates: bool, has_actions: bool, text: str = "") -> list[str]:
     questions = []
     if has_costs:
         questions.append("Is financial support or an alternative payment option available?")
@@ -226,9 +272,19 @@ def _questions_for(doc_type: str, has_costs: bool, has_dates: bool, has_actions:
         questions.append("Is there anything else I need to submit or bring?")
     if doc_type == "school_letter":
         questions.append("What should my child bring on the day, and what time will they return?")
+        if "medication" in text.lower() or "medical" in text.lower():
+            questions.append("What is the procedure for administering medication during the trip?")
+        if "packed lunch" in text.lower() or "lunch" in text.lower():
+            questions.append("Are school meals provided, or should I send money for food?")
     elif doc_type == "council_notice":
         questions.append("What happens if I cannot meet the deadline?")
-    return questions[:5]
+    elif doc_type == "nhs_guidance":
+        questions.append("Should I bring my NHS number or any medical records to the appointment?")
+    elif doc_type == "housing_property":
+        questions.append("Are there any additional fees or charges not listed?")
+    elif doc_type == "hr_policy":
+        questions.append("Does this policy apply to my specific contract type or employment status?")
+    return questions[:7]
 
 
 def _summary_for(doc_type: str, title: str, has_actions: bool, has_dates: bool, has_costs: bool) -> list[str]:

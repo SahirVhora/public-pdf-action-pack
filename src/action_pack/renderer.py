@@ -69,6 +69,14 @@ def render_markdown(pack: ActionPack) -> str:
         lines.append("- No explicit decisions found.")
     lines.append("")
 
+    lines.append("## Child checklist")
+    if pack.child_checklist:
+        for item in pack.child_checklist:
+            lines.append(f"- {item}")
+    else:
+        lines.append("- No child checklist items found.")
+    lines.append("")
+
     lines.append("## Risks if ignored")
     if pack.risks:
         for risk in pack.risks:
