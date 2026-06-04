@@ -1,0 +1,254 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="description" content="Turn public-sector PDFs into plain-English actions, deadlines, and checklists. No AI required. Works fully offline.">
+<meta property="og:title" content="Public PDF Action Pack">
+<meta property="og:description" content="Turn public-sector PDFs into plain-English actions, deadlines, and checklists.">
+<meta property="og:image" content="https://sahirvhora.github.io/public-pdf-action-pack/assets/pipeline.svg">
+<meta property="og:type" content="website">
+<title>Public PDF Action Pack</title>
+<style>
+:root {
+  --bg: #090d14;
+  --bg2: #0d1119;
+  --card: #111620;
+  --card-hover: #171c28;
+  --border: #1c212b;
+  --text: #e6e9f0;
+  --text2: #c5c9d4;
+  --text3: #5f6675;
+  --accent: #c8a84e;
+  --accent-soft: rgba(200,168,78,0.08);
+  --radius: 8px;
+  --font: 'Segoe UI', system-ui, -apple-system, sans-serif;
+  --mono: 'SF Mono', 'Cascadia Code', 'JetBrains Mono', monospace;
+}
+* { margin: 0; padding: 0; box-sizing: border-box; }
+body {
+  background: var(--bg);
+  color: var(--text);
+  font-family: var(--font);
+  line-height: 1.6;
+  min-height: 100vh;
+}
+.container { max-width: 860px; margin: 0 auto; padding: 40px 24px; }
+.hero { text-align: center; padding: 60px 0 40px; }
+.hero h1 {
+  font-size: 36px; font-weight: 700; color: var(--text);
+  margin-bottom: 12px; letter-spacing: -0.5px;
+}
+.hero p {
+  font-size: 16px; color: var(--text3); max-width: 560px;
+  margin: 0 auto 32px; line-height: 1.7;
+}
+.hero .cta {
+  display: inline-flex; gap: 12px; flex-wrap: wrap; justify-content: center;
+}
+.btn {
+  padding: 10px 24px; border-radius: var(--radius); font-size: 14px;
+  font-weight: 600; cursor: pointer; text-decoration: none;
+  transition: all 0.2s ease; border: 1px solid var(--border);
+  display: inline-flex; align-items: center; gap: 6px;
+}
+.btn-primary {
+  background: var(--accent); color: #090d14; border-color: var(--accent);
+}
+.btn-primary:hover { background: #d4b85c; }
+.btn-secondary {
+  background: var(--bg2); color: var(--text2);
+}
+.btn-secondary:hover { background: var(--card-hover); color: var(--text); }
+.diagram {
+  text-align: center; padding: 20px 0 40px;
+  background: var(--bg2); border-radius: var(--radius);
+  border: 1px solid var(--border); margin-bottom: 48px;
+}
+.diagram img { max-width: 100%; height: auto; }
+
+.section { margin-bottom: 48px; }
+.section h2 {
+  font-size: 22px; font-weight: 700; color: var(--text);
+  margin-bottom: 16px; padding-bottom: 8px;
+  border-bottom: 1px solid var(--border);
+}
+.grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 14px; }
+.card {
+  background: var(--card); border: 1px solid var(--border);
+  border-radius: var(--radius); padding: 20px;
+  transition: all 0.2s ease;
+}
+.card:hover { background: var(--card-hover); border-color: var(--accent); }
+.card h3 {
+  font-size: 15px; font-weight: 600; color: var(--text);
+  margin-bottom: 6px;
+}
+.card p { font-size: 13px; color: var(--text3); line-height: 1.5; }
+.card .icon { font-size: 24px; margin-bottom: 8px; }
+.tag {
+  display: inline-block; padding: 2px 8px; border-radius: 4px;
+  font-size: 10px; font-weight: 600; text-transform: uppercase;
+  letter-spacing: 0.5px; margin-right: 4px;
+}
+.tag-school { background: rgba(99,179,237,0.15); color: #63b3ed; }
+.tag-council { background: rgba(245,101,101,0.15); color: #f56565; }
+.tag-nhs { background: rgba(72,187,120,0.15); color: #48bb78; }
+.tag-property { background: rgba(237,137,54,0.15); color: #ed8936; }
+.tag-offline { background: var(--accent-soft); color: var(--accent); }
+
+.demo-table {
+  width: 100%; border-collapse: collapse; margin-top: 12px;
+}
+.demo-table th {
+  text-align: left; padding: 10px 14px; font-size: 11px;
+  font-weight: 700; color: var(--text3); text-transform: uppercase;
+  letter-spacing: 0.5px; border-bottom: 1px solid var(--border);
+}
+.demo-table td {
+  padding: 10px 14px; font-size: 13px; color: var(--text2);
+  border-bottom: 1px solid var(--border);
+}
+.demo-table tr:hover td { background: var(--accent-soft); }
+.demo-table code {
+  background: var(--bg); padding: 3px 8px; border-radius: 4px;
+  font-family: var(--mono); font-size: 11px; color: var(--accent);
+}
+.install {
+  background: var(--card); border: 1px solid var(--border);
+  border-radius: var(--radius); padding: 20px 24px; margin-top: 12px;
+}
+.install pre {
+  background: var(--bg); padding: 14px 18px; border-radius: 6px;
+  font-family: var(--mono); font-size: 12px; color: var(--text);
+  overflow-x: auto; line-height: 1.7;
+}
+.install .lang { font-size: 10px; color: var(--text3); margin-bottom: 4px; }
+footer {
+  text-align: center; padding: 32px 0; border-top: 1px solid var(--border);
+  margin-top: 48px; font-size: 12px; color: var(--text3);
+}
+footer a { color: var(--accent); text-decoration: none; }
+footer a:hover { text-decoration: underline; }
+@media (max-width: 640px) {
+  .hero h1 { font-size: 26px; }
+  .container { padding: 20px 14px; }
+}
+</style>
+</head>
+<body>
+
+<div class="container">
+
+  <div class="hero">
+    <h1>Public PDF Action Pack</h1>
+    <p>Turn school letters, council notices, NHS appointments, and solicitor documents into plain-English actions, deadlines, and checklists. No AI required.</p>
+    <div class="cta">
+      <a href="https://github.com/SahirVhora/public-pdf-action-pack" class="btn btn-primary">View on GitHub</a>
+      <a href="#install" class="btn btn-secondary">Run locally</a>
+    </div>
+  </div>
+
+  <div class="diagram">
+    <img src="assets/pipeline.svg" alt="Pipeline: PDF/TXT → Extract → Classify → Analyse → Actions, Dates, Costs, Decisions, Checklist, Export">
+  </div>
+
+  <div class="section">
+    <h2>What it does</h2>
+    <div class="grid">
+      <div class="card">
+        <div class="icon">📄</div>
+        <h3>Upload any public PDF</h3>
+        <p>School trip letters, council tax notices, NHS appointments, solicitor letters – drag and drop or paste text.</p>
+      </div>
+      <div class="card">
+        <div class="icon">🔍</div>
+        <h3>Auto-classify 6 document types</h3>
+        <p>School letters, council notices, NHS guidance, housing/property, HR policy, government guidance.</p>
+      </div>
+      <div class="card">
+        <div class="icon">✓</div>
+        <h3>Action checklist with evidence</h3>
+        <p>Every action links to the source page. Tick boxes. Expand evidence. No guessing what to do.</p>
+      </div>
+      <div class="card">
+        <div class="icon">⚖</div>
+        <h3>Decisions to make</h3>
+        <p>Property docs get ownership, contribution, and wills decision tables with options and what to ask your solicitor.</p>
+      </div>
+      <div class="card">
+        <div class="icon">🎒</div>
+        <h3>Child & prep checklists</h3>
+        <p>School trips extract what to pack. NHS appointments extract what to bring. Context-aware extraction.</p>
+      </div>
+      <div class="card">
+        <div class="icon">📤</div>
+        <h3>Export anywhere</h3>
+        <p>Download Markdown or JSON. Copy a WhatsApp-friendly summary. Works fully offline with deterministic fallback.</p>
+      </div>
+    </div>
+  </div>
+
+  <div class="section">
+    <h2>Demo documents</h2>
+    <table class="demo-table">
+      <thead>
+        <tr><th>Document</th><th>Type</th><th>What it demonstrates</th><th>Run</th></tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td>school-trip-letter.pdf</td>
+          <td><span class="tag tag-school">school</span></td>
+          <td>Child checklist, payment, consent form, medication questions</td>
+          <td><code>make demo-school</code></td>
+        </tr>
+        <tr>
+          <td>council-tax-reminder.pdf</td>
+          <td><span class="tag tag-council">council</span></td>
+          <td>Recovery action risks, liability order, urgency 5/5</td>
+          <td><code>make demo-council</code></td>
+        </tr>
+        <tr>
+          <td>nhs-appointment-letter.pdf</td>
+          <td><span class="tag tag-nhs">nhs</span></td>
+          <td>Preparation checklist, arrival time, what to bring</td>
+          <td><code>make demo-nhs</code></td>
+        </tr>
+        <tr>
+          <td>property-solicitor-letter.pdf</td>
+          <td><span class="tag tag-property">property</span></td>
+          <td>Return section extraction, costs breakdown, decisions table</td>
+          <td><code>make demo-property</code></td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <div class="section" id="install">
+    <h2>Run locally</h2>
+    <div class="install">
+      <p class="lang">Terminal</p>
+      <pre>git clone https://github.com/SahirVhora/public-pdf-action-pack.git
+cd public-pdf-action-pack
+python3 -m venv .venv
+. .venv/bin/activate
+pip install -e '.[test]'
+streamlit run app.py</pre>
+    </div>
+    <div class="install" style="margin-top:12px">
+      <p class="lang">CLI (no browser needed)</p>
+      <pre>PYTHONPATH=src python3 -m action_pack.cli demos/school-trip-letter.pdf --no-ai</pre>
+    </div>
+    <p style="margin-top:12px;font-size:13px;color:var(--text3)">
+      <span class="tag tag-offline">offline</span> No API key needed. Turn AI off for deterministic local fallback. 30 tests.
+    </p>
+  </div>
+
+  <footer>
+    <p><a href="https://github.com/SahirVhora/public-pdf-action-pack">GitHub</a> · MIT license · Built with Python + Streamlit</p>
+  </footer>
+
+</div>
+
+</body>
+</html>

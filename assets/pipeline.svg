@@ -1,0 +1,112 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 400" width="800" height="400">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#090d14"/>
+      <stop offset="100%" stop-color="#111620"/>
+    </linearGradient>
+    <linearGradient id="accentGrad" x1="0" y1="0" x2="1" y2="0">
+      <stop offset="0%" stop-color="#c8a84e"/>
+      <stop offset="100%" stop-color="#d4b85c"/>
+    </linearGradient>
+    <linearGradient id="boxGrad" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#1c212b"/>
+      <stop offset="100%" stop-color="#151920"/>
+    </linearGradient>
+    <filter id="glow">
+      <feGaussianBlur stdDeviation="3" result="blur"/>
+      <feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge>
+    </filter>
+    <filter id="shadow">
+      <feDropShadow dx="0" dy="2" stdDeviation="4" flood-color="#000" flood-opacity="0.3"/>
+    </filter>
+  </defs>
+
+  <!-- Background -->
+  <rect width="800" height="400" fill="url(#bg)" rx="8"/>
+
+  <!-- Title -->
+  <text x="400" y="36" text-anchor="middle" font-family="Segoe UI,system-ui,sans-serif" font-size="20" font-weight="700" fill="#e6e9f0">Public PDF Action Pack</text>
+  <text x="400" y="56" text-anchor="middle" font-family="Segoe UI,system-ui,sans-serif" font-size="12" fill="#5f6675">Turn public-sector PDFs into plain-English actions, deadlines, and checklists</text>
+
+  <!-- Input box -->
+  <rect x="30" y="160" width="120" height="60" rx="6" fill="url(#boxGrad)" stroke="#1c212b" filter="url(#shadow)"/>
+  <text x="90" y="186" text-anchor="middle" font-family="Segoe UI,system-ui,sans-serif" font-size="13" font-weight="600" fill="#e6e9f0">PDF / TXT</text>
+  <text x="90" y="204" text-anchor="middle" font-family="Segoe UI,system-ui,sans-serif" font-size="10" fill="#5f6675">Upload or paste</text>
+
+  <!-- Arrow 1 -->
+  <line x1="150" y1="190" x2="200" y2="190" stroke="#c8a84e" stroke-width="2" marker-end="url(#arrowGold)"/>
+  <defs><marker id="arrowGold" markerWidth="8" markerHeight="6" refX="8" refY="3" orient="auto"><path d="M0,0 L8,3 L0,6 Z" fill="#c8a84e"/></marker></defs>
+
+  <!-- Extract box -->
+  <rect x="205" y="145" width="130" height="90" rx="6" fill="url(#boxGrad)" stroke="#1c212b" filter="url(#shadow)"/>
+  <text x="270" y="178" text-anchor="middle" font-family="Segoe UI,system-ui,sans-serif" font-size="13" font-weight="600" fill="#e6e9f0">Extract</text>
+  <text x="270" y="196" text-anchor="middle" font-family="Segoe UI,system-ui,sans-serif" font-size="10" fill="#5f6675">Text with page markers</text>
+  <text x="270" y="212" text-anchor="middle" font-family="Segoe UI,system-ui,sans-serif" font-size="10" fill="#5f6675">pymupdf / raw text</text>
+
+  <!-- Arrow 2 -->
+  <line x1="335" y1="190" x2="385" y2="190" stroke="#c8a84e" stroke-width="2" marker-end="url(#arrowGold)"/>
+
+  <!-- Classify box -->
+  <rect x="390" y="155" width="110" height="70" rx="6" fill="url(#boxGrad)" stroke="#1c212b" filter="url(#shadow)"/>
+  <text x="445" y="188" text-anchor="middle" font-family="Segoe UI,system-ui,sans-serif" font-size="13" font-weight="600" fill="#e6e9f0">Classify</text>
+  <text x="445" y="208" text-anchor="middle" font-family="Segoe UI,system-ui,sans-serif" font-size="10" fill="#5f6675">6 document types</text>
+
+  <!-- Arrow 3 -->
+  <line x1="500" y1="190" x2="550" y2="190" stroke="#c8a84e" stroke-width="2" marker-end="url(#arrowGold)"/>
+
+  <!-- Analyse box -->
+  <rect x="555" y="135" width="140" height="110" rx="6" fill="url(#boxGrad)" stroke="#c8a84e" stroke-width="1.5" filter="url(#shadow)"/>
+  <text x="625" y="168" text-anchor="middle" font-family="Segoe UI,system-ui,sans-serif" font-size="13" font-weight="600" fill="#c8a84e">Analyse</text>
+  <text x="625" y="186" text-anchor="middle" font-family="Segoe UI,system-ui,sans-serif" font-size="10" fill="#5f6675">Actions, dates, costs</text>
+  <text x="625" y="202" text-anchor="middle" font-family="Segoe UI,system-ui,sans-serif" font-size="10" fill="#5f6675">Decisions, risks</text>
+  <text x="625" y="218" text-anchor="middle" font-family="Segoe UI,system-ui,sans-serif" font-size="10" fill="#5f6675">Checklist, questions</text>
+  <text x="625" y="236" text-anchor="middle" font-family="Segoe UI,system-ui,sans-serif" font-size="9" fill="#c8a84e">AI or fallback</text>
+
+  <!-- Output cards row -->
+  <g transform="translate(0, 280)">
+    <!-- Card 1: Actions -->
+    <rect x="30" y="0" width="110" height="95" rx="6" fill="url(#boxGrad)" stroke="#1c212b" filter="url(#shadow)"/>
+    <text x="85" y="22" text-anchor="middle" font-family="Segoe UI,system-ui,sans-serif" font-size="20">✓</text>
+    <text x="85" y="42" text-anchor="middle" font-family="Segoe UI,system-ui,sans-serif" font-size="11" font-weight="600" fill="#e6e9f0">Actions</text>
+    <text x="85" y="58" text-anchor="middle" font-family="Segoe UI,system-ui,sans-serif" font-size="9" fill="#5f6675">Checkbox list</text>
+    <text x="85" y="74" text-anchor="middle" font-family="Segoe UI,system-ui,sans-serif" font-size="9" fill="#5f6675">Page-linked</text>
+
+    <!-- Card 2: Dates -->
+    <rect x="155" y="0" width="110" height="95" rx="6" fill="url(#boxGrad)" stroke="#1c212b" filter="url(#shadow)"/>
+    <text x="210" y="22" text-anchor="middle" font-family="Segoe UI,system-ui,sans-serif" font-size="20">📅</text>
+    <text x="210" y="42" text-anchor="middle" font-family="Segoe UI,system-ui,sans-serif" font-size="11" font-weight="600" fill="#e6e9f0">Key Dates</text>
+    <text x="210" y="58" text-anchor="middle" font-family="Segoe UI,system-ui,sans-serif" font-size="9" fill="#5f6675">Deadlines</text>
+    <text x="210" y="74" text-anchor="middle" font-family="Segoe UI,system-ui,sans-serif" font-size="9" fill="#5f6675">ISO dates</text>
+
+    <!-- Card 3: Costs -->
+    <rect x="280" y="0" width="110" height="95" rx="6" fill="url(#boxGrad)" stroke="#1c212b" filter="url(#shadow)"/>
+    <text x="335" y="22" text-anchor="middle" font-family="Segoe UI,system-ui,sans-serif" font-size="20">£</text>
+    <text x="335" y="42" text-anchor="middle" font-family="Segoe UI,system-ui,sans-serif" font-size="11" font-weight="600" fill="#e6e9f0">Costs</text>
+    <text x="335" y="58" text-anchor="middle" font-family="Segoe UI,system-ui,sans-serif" font-size="9" fill="#5f6675">Amounts</text>
+    <text x="335" y="74" text-anchor="middle" font-family="Segoe UI,system-ui,sans-serif" font-size="9" fill="#5f6675">Contacts</text>
+
+    <!-- Card 4: Decisions -->
+    <rect x="405" y="0" width="110" height="95" rx="6" fill="url(#boxGrad)" stroke="#1c212b" filter="url(#shadow)"/>
+    <text x="460" y="22" text-anchor="middle" font-family="Segoe UI,system-ui,sans-serif" font-size="20">⚖</text>
+    <text x="460" y="42" text-anchor="middle" font-family="Segoe UI,system-ui,sans-serif" font-size="11" font-weight="600" fill="#e6e9f0">Decisions</text>
+    <text x="460" y="58" text-anchor="middle" font-family="Segoe UI,system-ui,sans-serif" font-size="9" fill="#5f6675">Options</text>
+    <text x="460" y="74" text-anchor="middle" font-family="Segoe UI,system-ui,sans-serif" font-size="9" fill="#5f6675">What to ask</text>
+
+    <!-- Card 5: Checklist -->
+    <rect x="530" y="0" width="110" height="95" rx="6" fill="url(#boxGrad)" stroke="#1c212b" filter="url(#shadow)"/>
+    <text x="585" y="22" text-anchor="middle" font-family="Segoe UI,system-ui,sans-serif" font-size="20">🎒</text>
+    <text x="585" y="42" text-anchor="middle" font-family="Segoe UI,system-ui,sans-serif" font-size="11" font-weight="600" fill="#e6e9f0">Checklist</text>
+    <text x="585" y="58" text-anchor="middle" font-family="Segoe UI,system-ui,sans-serif" font-size="9" fill="#5f6675">School prep</text>
+    <text x="585" y="74" text-anchor="middle" font-family="Segoe UI,system-ui,sans-serif" font-size="9" fill="#5f6675">NHS prep</text>
+
+    <!-- Card 6: Export -->
+    <rect x="655" y="0" width="110" height="95" rx="6" fill="url(#boxGrad)" stroke="#c8a84e" stroke-width="1.5" filter="url(#shadow)"/>
+    <text x="710" y="22" text-anchor="middle" font-family="Segoe UI,system-ui,sans-serif" font-size="20">📤</text>
+    <text x="710" y="42" text-anchor="middle" font-family="Segoe UI,system-ui,sans-serif" font-size="11" font-weight="600" fill="#c8a84e">Export</text>
+    <text x="710" y="58" text-anchor="middle" font-family="Segoe UI,system-ui,sans-serif" font-size="9" fill="#5f6675">Markdown</text>
+    <text x="710" y="74" text-anchor="middle" font-family="Segoe UI,system-ui,sans-serif" font-size="9" fill="#5f6675">JSON / WhatsApp</text>
+  </g>
+
+  <!-- Bottom tagline -->
+  <text x="400" y="395" text-anchor="middle" font-family="Segoe UI,system-ui,sans-serif" font-size="9" fill="#3a3f4a">No AI required · Works fully offline · 30 tests · MIT license</text>
+</svg>
