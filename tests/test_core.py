@@ -34,10 +34,15 @@ def test_fallback_analysis_extracts_dates_costs_contacts_and_actions():
     pack = analyse_without_ai(SCHOOL_TEXT)
     assert pack.title == "Year 4 Museum Trip"
     assert pack.document_type == "school_letter"
-    assert any(item.date == "2026-06-14" and "consent" in item.label.lower() for item in pack.key_dates)
+    assert any(
+        item.date == "2026-06-14" and "consent" in item.label.lower()
+        for item in pack.key_dates
+    )
     assert any(cost.amount == "£25" for cost in pack.costs)
     assert any(contact.value == "office@example.school" for contact in pack.contacts)
-    assert any("Return the consent form" in action.action for action in pack.required_actions)
+    assert any(
+        "Return the consent form" in action.action for action in pack.required_actions
+    )
     assert pack.urgency_score >= 3
 
 

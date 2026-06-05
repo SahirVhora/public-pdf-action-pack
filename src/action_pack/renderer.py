@@ -20,7 +20,9 @@ def render_markdown(pack: ActionPack) -> str:
     if pack.required_actions:
         for action in pack.required_actions:
             deadline = f" by {action.deadline}" if action.deadline else ""
-            lines.append(f"- [{action.priority}] {action.action} - owner: {action.owner}{deadline}")
+            lines.append(
+                f"- [{action.priority}] {action.action} - owner: {action.owner}{deadline}"
+            )
             if action.source_text and not source_is_duplicate(action):
                 lines.append(f"  Evidence: {action.source_text}")
     else:
@@ -64,7 +66,9 @@ def render_markdown(pack: ActionPack) -> str:
         lines.append("|---|---|---|---|")
         for decision in pack.decisions_to_make:
             options = "; ".join(decision.options) or "Not specified"
-            lines.append(f"| {_table_cell(decision.decision)} | {_table_cell(options)} | {_table_cell(decision.what_to_ask)} | {decision.priority} |")
+            lines.append(
+                f"| {_table_cell(decision.decision)} | {_table_cell(options)} | {_table_cell(decision.what_to_ask)} | {decision.priority} |"
+            )
     else:
         lines.append("- No explicit decisions found.")
     lines.append("")
@@ -107,21 +111,35 @@ def _table_cell(value: str) -> str:
 
 
 def render_copy_message(pack: ActionPack) -> str:
-    actions = "; ".join(action.action for action in pack.required_actions[:3]) or "review the document"
-    dates = "; ".join(f"{d.label}: {d.date}" for d in pack.key_dates[:3]) or "no clear dates found"
+    actions = (
+        "; ".join(action.action for action in pack.required_actions[:3])
+        or "review the document"
+    )
+    dates = (
+        "; ".join(f"{d.label}: {d.date}" for d in pack.key_dates[:3])
+        or "no clear dates found"
+    )
     return f"I reviewed '{pack.title}'. Main actions: {actions}. Key dates: {dates}."
 
 
 def render_whatsapp_summary(pack: ActionPack) -> str:
     """Generate a WhatsApp-friendly summary with emojis."""
     lines = [f"*{pack.title}*"]
-    lines.append(f"Type: {pack.document_type.replace('_', ' ')} | Urgency: {'!' * pack.urgency_score}")
+    lines.append(
+        f"Type: {pack.document_type.replace('_', ' ')} | Urgency: {'!' * pack.urgency_score}"
+    )
 
     if pack.required_actions:
         lines.append("")
         lines.append("*Actions needed:*")
         for action in pack.required_actions[:3]:
-            priority_icon = "!! " if action.priority == "high" else "! " if action.priority == "medium" else ""
+            priority_icon = (
+                "!! "
+                if action.priority == "high"
+                else "! "
+                if action.priority == "medium"
+                else ""
+            )
             lines.append(f"  {priority_icon}{action.action}")
 
     if pack.key_dates:

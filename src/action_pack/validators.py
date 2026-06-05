@@ -28,6 +28,8 @@ def validate_action_pack(pack: ActionPack) -> ValidationResult:
     if pack.urgency_score >= 4 and not pack.required_actions:
         warnings.append("Urgency is high but no required actions were extracted.")
     if not pack.key_dates:
-        warnings.append("No dates were found. Check whether the source document is scanned or poorly extracted.")
+        warnings.append(
+            "No dates were found. Check whether the source document is scanned or poorly extracted."
+        )
 
     return ValidationResult(ok=not issues, issues=issues, warnings=warnings)

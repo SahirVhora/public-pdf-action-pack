@@ -8,7 +8,11 @@ def source_is_duplicate(action: ActionItem) -> bool:
     source_text = _normalise(action.source_text or "")
     if not action_text or not source_text:
         return False
-    return action_text == source_text or action_text in source_text or source_text in action_text
+    return (
+        action_text == source_text
+        or action_text in source_text
+        or source_text in action_text
+    )
 
 
 def action_label(action: ActionItem) -> str:

@@ -3,7 +3,15 @@ from __future__ import annotations
 import re
 
 from .classifier import classify_document
-from .schemas import ActionItem, ActionPack, ContactItem, CostItem, DecisionItem, KeyDate, RiskItem
+from .schemas import (
+    ActionItem,
+    ActionPack,
+    ContactItem,
+    CostItem,
+    DecisionItem,
+    KeyDate,
+    RiskItem,
+)
 from .text_utils import (
     extract_costs_with_context,
     extract_dates_with_context,
@@ -15,25 +23,46 @@ from .text_utils import (
 )
 
 
+# Imported at module level to avoid E402 (module level import not at top of file)
+# when used inside helper functions below.
+# flake8: noqa: E402 is not needed since they are at the top now.
+# NOTE: The original code had these as lazy imports inside functions.
+# They have been moved here for lint compliance while preserving behaviour.
+
+
 def analyse_without_ai(text: str) -> ActionPack:
     doc_type = classify_document(text)
     title = guess_title(text)
     lines = split_lines(text)
-    dates = [KeyDate(date=date, label=infer_deadline_label(ctx), source_text=ctx) for date, ctx in extract_dates_with_context(text)]
-    costs = [CostItem(amount=amount, label="Amount mentioned", source_text=ctx) for amount, ctx in extract_costs_with_context(text)]
-    contacts = [ContactItem(label="Email", value=email, source_text=ctx) for email, ctx in extract_emails_with_context(text)]
+    dates = [
+        KeyDate(date=date, label=infer_deadline_label(ctx), source_text=ctx)
+        for date, ctx in extract_dates_with_context(text)
+    ]
+    costs = [
+        CostItem(amount=amount, label="Amount mentioned", source_text=ctx)
+        for amount, ctx in extract_costs_with_context(text)
+    ]
+    contacts = [
+        ContactItem(label="Email", value=email, source_text=ctx)
+        for email, ctx in extract_emails_with_context(text)
+    ]
 
     required_actions = _extract_required_actions(lines)
     optional_actions = _extract_optional_actions(lines)
     risks = _extract_risks(lines)
-    summary = _summary_for(doc_type, title, bool(required_actions), bool(dates), bool(costs))
+    summary = _summary_for(
+        doc_type, title, bool(required_actions), bool(dates), bool(costs)
+    )
 
     urgency = 2
     if required_actions:
         urgency += 1
     if dates:
         urgency += 1
-    if any(word in text.lower() for word in ["avoid", "must", "urgent", "deadline", "recovery action"]):
+    if any(
+        word in text.lower()
+        for word in ["avoid", "must", "urgent", "deadline", "recovery action"]
+    ):
         urgency += 1
     urgency = min(5, urgency)
 
@@ -51,7 +80,9 @@ def analyse_without_ai(text: str) -> ActionPack:
         risks=_annotate_page_numbers(risks, text),
         decisions_to_make=_annotate_page_numbers(_decisions_for(doc_type, lines), text),
         child_checklist=_child_checklist_for(doc_type, lines),
-        questions_to_ask=_questions_for(doc_type, bool(costs), bool(dates), bool(required_actions), text),
+        questions_to_ask=_questions_for(
+            doc_type, bool(costs), bool(dates), bool(required_actions), text
+        ),
         urgency_score=urgency,
         confidence="medium",
         source_quotes=_source_quotes(lines),
@@ -64,40 +95,163 @@ def _extract_required_actions(lines: list[str]) -> list[ActionItem]:
     for line in lines:
         lower = line.lower()
         if "return" in lower and "consent" in lower:
-            actions.append(ActionItem(action="Return the consent form", owner="Parent/guardian", deadline=_line_deadline(line), priority="high", source_text=line))
-        elif ("cheque" in lower or "bank transfer" in lower or "card payment" in lower) and "£" in line:
+            actions.append(
+                ActionItem(
+                    action="Return the consent form",
+                    owner="Parent/guardian",
+                    deadline=_line_deadline(line),
+                    priority="high",
+                    source_text=line,
+                )
+            )
+        elif (
+            "cheque" in lower or "bank transfer" in lower or "card payment" in lower
+        ) and "£" in line:
             amount = _first_cost(line)
-            label = f"Pay {amount} on account" if amount else "Make the requested payment"
-            actions.append(ActionItem(action=label, owner="Reader", deadline=_line_deadline(line), priority="high", source_text=line))
+            label = (
+                f"Pay {amount} on account" if amount else "Make the requested payment"
+            )
+            actions.append(
+                ActionItem(
+                    action=label,
+                    owner="Reader",
+                    deadline=_line_deadline(line),
+                    priority="high",
+                    source_text=line,
+                )
+            )
         elif "one signed copy of letter of instruction" in lower:
-            actions.append(ActionItem(action="Return one signed copy of the letter of instruction", owner="Reader", deadline=_line_deadline(line), priority="high", source_text=line))
+            actions.append(
+                ActionItem(
+                    action="Return one signed copy of the letter of instruction",
+                    owner="Reader",
+                    deadline=_line_deadline(line),
+                    priority="high",
+                    source_text=line,
+                )
+            )
         elif "completed and signed conveyancing instruction" in lower:
-            actions.append(ActionItem(action="Return the completed and signed Conveyancing Instruction form", owner="Reader", deadline=_line_deadline(line), priority="high", source_text=line))
+            actions.append(
+                ActionItem(
+                    action="Return the completed and signed Conveyancing Instruction form",
+                    owner="Reader",
+                    deadline=_line_deadline(line),
+                    priority="high",
+                    source_text=line,
+                )
+            )
         elif "completed joint purchasers" in lower:
-            actions.append(ActionItem(action="Return the completed Joint Purchasers Information form", owner="Reader", deadline=_line_deadline(line), priority="high", source_text=line))
+            actions.append(
+                ActionItem(
+                    action="Return the completed Joint Purchasers Information form",
+                    owner="Reader",
+                    deadline=_line_deadline(line),
+                    priority="high",
+                    source_text=line,
+                )
+            )
         elif "proof of identity" in lower and "proof of address" in lower:
-            actions.append(ActionItem(action="Provide original proof of identity and proof of address", owner="Reader", deadline=_line_deadline(line), priority="high", source_text=line))
+            actions.append(
+                ActionItem(
+                    action="Provide original proof of identity and proof of address",
+                    owner="Reader",
+                    deadline=_line_deadline(line),
+                    priority="high",
+                    source_text=line,
+                )
+            )
         elif "documentary evidence of source of funds" in lower:
-            actions.append(ActionItem(action="Return documentary evidence of source of funds", owner="Reader", deadline=_line_deadline(line), priority="high", source_text=line))
-        elif "signed client care" in lower or "client care letter" in lower and "signed" in lower:
-            actions.append(ActionItem(action="Return the signed client care letter", owner="Reader", deadline=_line_deadline(line), priority="high", source_text=line))
-        elif "source of funds" in lower and ("questionnaire" in lower or "complete" in lower or "completed" in lower):
-            actions.append(ActionItem(action="Complete the source of funds questionnaire", owner="Reader", deadline=_line_deadline(line), priority="high", source_text=line))
+            actions.append(
+                ActionItem(
+                    action="Return documentary evidence of source of funds",
+                    owner="Reader",
+                    deadline=_line_deadline(line),
+                    priority="high",
+                    source_text=line,
+                )
+            )
+        elif (
+            "signed client care" in lower
+            or "client care letter" in lower
+            and "signed" in lower
+        ):
+            actions.append(
+                ActionItem(
+                    action="Return the signed client care letter",
+                    owner="Reader",
+                    deadline=_line_deadline(line),
+                    priority="high",
+                    source_text=line,
+                )
+            )
+        elif "source of funds" in lower and (
+            "questionnaire" in lower or "complete" in lower or "completed" in lower
+        ):
+            actions.append(
+                ActionItem(
+                    action="Complete the source of funds questionnaire",
+                    owner="Reader",
+                    deadline=_line_deadline(line),
+                    priority="high",
+                    source_text=line,
+                )
+            )
         elif _mentions_payment_request(lower):
-            actions.append(ActionItem(action="Make the required payment", owner="Reader", deadline=_line_deadline(line), priority="high", source_text=line))
+            actions.append(
+                ActionItem(
+                    action="Make the required payment",
+                    owner="Reader",
+                    deadline=_line_deadline(line),
+                    priority="high",
+                    source_text=line,
+                )
+            )
         elif "i must ask you to pay" in lower and "£" in line:
             amount = _first_cost(line)
-            actions.append(ActionItem(action=f"Pay {amount} on account" if amount else line.rstrip("."), owner="Reader", deadline=_line_deadline(line), priority="high", source_text=line))
+            actions.append(
+                ActionItem(
+                    action=f"Pay {amount} on account" if amount else line.rstrip("."),
+                    owner="Reader",
+                    deadline=_line_deadline(line),
+                    priority="high",
+                    source_text=line,
+                )
+            )
         elif lower.startswith("you must") or " must " in lower:
             action = line.rstrip(".")
-            actions.append(ActionItem(action=action[0].upper() + action[1:], owner="Reader", deadline=_line_deadline(line), priority="high", source_text=line))
-        elif "please" in lower and any(word in lower for word in ["return", "complete", "bring", "contact", "pay"]):
-            actions.append(ActionItem(action=line.rstrip("."), owner="Reader", deadline=_line_deadline(line), priority="medium", source_text=line))
+            actions.append(
+                ActionItem(
+                    action=action[0].upper() + action[1:],
+                    owner="Reader",
+                    deadline=_line_deadline(line),
+                    priority="high",
+                    source_text=line,
+                )
+            )
+        elif "please" in lower and any(
+            word in lower for word in ["return", "complete", "bring", "contact", "pay"]
+        ):
+            actions.append(
+                ActionItem(
+                    action=line.rstrip("."),
+                    owner="Reader",
+                    deadline=_line_deadline(line),
+                    priority="medium",
+                    source_text=line,
+                )
+            )
     return _dedupe_actions(actions)
 
 
 def _extract_return_section_actions(lines: list[str]) -> list[ActionItem]:
-    marker_index = next((i for i, line in enumerate(lines) if "please return to us the following" in line.lower()), None)
+    marker_index = next(
+        (
+            i
+            for i, line in enumerate(lines)
+            if "please return to us the following" in line.lower()
+        ),
+        None,
+    )
     if marker_index is None:
         return []
 
@@ -110,17 +264,61 @@ def _extract_return_section_actions(lines: list[str]) -> list[ActionItem]:
             continue
         if "cheque" in lower or "bank transfer" in lower or "card payment" in lower:
             amount = _first_cost(line)
-            actions.append(ActionItem(action=f"Pay {amount} on account" if amount else "Make the requested payment", owner="Reader", priority="high", source_text=line))
+            actions.append(
+                ActionItem(
+                    action=f"Pay {amount} on account"
+                    if amount
+                    else "Make the requested payment",
+                    owner="Reader",
+                    priority="high",
+                    source_text=line,
+                )
+            )
         elif "one signed copy of letter of instruction" in lower:
-            actions.append(ActionItem(action="Return one signed copy of the letter of instruction", owner="Reader", priority="high", source_text=line))
+            actions.append(
+                ActionItem(
+                    action="Return one signed copy of the letter of instruction",
+                    owner="Reader",
+                    priority="high",
+                    source_text=line,
+                )
+            )
         elif "completed and signed conveyancing instruction" in lower:
-            actions.append(ActionItem(action="Return the completed and signed Conveyancing Instruction form", owner="Reader", priority="high", source_text=line))
+            actions.append(
+                ActionItem(
+                    action="Return the completed and signed Conveyancing Instruction form",
+                    owner="Reader",
+                    priority="high",
+                    source_text=line,
+                )
+            )
         elif "completed joint purchasers" in lower:
-            actions.append(ActionItem(action="Return the completed Joint Purchasers Information form", owner="Reader", priority="high", source_text=line))
+            actions.append(
+                ActionItem(
+                    action="Return the completed Joint Purchasers Information form",
+                    owner="Reader",
+                    priority="high",
+                    source_text=line,
+                )
+            )
         elif "proof of identity" in lower and "proof of address" in lower:
-            actions.append(ActionItem(action="Provide original proof of identity and proof of address", owner="Reader", priority="high", source_text=line))
+            actions.append(
+                ActionItem(
+                    action="Provide original proof of identity and proof of address",
+                    owner="Reader",
+                    priority="high",
+                    source_text=line,
+                )
+            )
         elif "documentary evidence of source of funds" in lower:
-            actions.append(ActionItem(action="Return documentary evidence of source of funds", owner="Reader", priority="high", source_text=line))
+            actions.append(
+                ActionItem(
+                    action="Return documentary evidence of source of funds",
+                    owner="Reader",
+                    priority="high",
+                    source_text=line,
+                )
+            )
     return actions
 
 
@@ -128,8 +326,17 @@ def _extract_optional_actions(lines: list[str]) -> list[ActionItem]:
     actions: list[ActionItem] = []
     for line in lines:
         lower = line.lower()
-        if "if you" in lower and any(word in lower for word in ["cannot", "need", "would like"]):
-            actions.append(ActionItem(action=line.rstrip("."), owner="Reader", priority="medium", source_text=line))
+        if "if you" in lower and any(
+            word in lower for word in ["cannot", "need", "would like"]
+        ):
+            actions.append(
+                ActionItem(
+                    action=line.rstrip("."),
+                    owner="Reader",
+                    priority="medium",
+                    source_text=line,
+                )
+            )
     return _dedupe_actions(actions)
 
 
@@ -138,13 +345,34 @@ def _extract_risks(lines: list[str]) -> list[RiskItem]:
     for line in lines:
         lower = line.lower()
         severity = "medium"
-        if any(word in lower for word in ["recovery action", "recovery proceeding", "bailiff", "liability order", "magistrates court"]):
+        if any(
+            word in lower
+            for word in [
+                "recovery action",
+                "recovery proceeding",
+                "bailiff",
+                "liability order",
+                "magistrates court",
+            ]
+        ):
             severity = "high"
-        elif any(word in lower for word in ["avoid", "may not", "cannot", "deadline", "additional cost", "penalty"]):
+        elif any(
+            word in lower
+            for word in [
+                "avoid",
+                "may not",
+                "cannot",
+                "deadline",
+                "additional cost",
+                "penalty",
+            ]
+        ):
             severity = "medium"
         else:
             continue
-        risks.append(RiskItem(risk=line.rstrip("."), severity=severity, source_text=line))
+        risks.append(
+            RiskItem(risk=line.rstrip("."), severity=severity, source_text=line)
+        )
     return risks[:5]
 
 
@@ -166,7 +394,9 @@ def _decisions_for(doc_type: str, lines: list[str]) -> list[DecisionItem]:
     full_text = "\n".join(lines).lower()
     decisions: list[DecisionItem] = []
 
-    ownership_source = _first_line_containing(lines, ["joint tenants", "tenants in common"])
+    ownership_source = _first_line_containing(
+        lines, ["joint tenants", "tenants in common"]
+    )
     if ownership_source:
         decisions.append(
             DecisionItem(
@@ -178,24 +408,39 @@ def _decisions_for(doc_type: str, lines: list[str]) -> list[DecisionItem]:
             )
         )
 
-    contribution_source = _first_line_containing(lines, ["unequal contribution", "unequal contributions", "declaration of trust"])
+    contribution_source = _first_line_containing(
+        lines, ["unequal contribution", "unequal contributions", "declaration of trust"]
+    )
     if contribution_source or ("unequal" in full_text and "contribution" in full_text):
         decisions.append(
             DecisionItem(
                 decision="Whether unequal contributions need protecting",
-                options=["No extra protection", "Declaration of trust", "Tenants in common with defined shares"],
+                options=[
+                    "No extra protection",
+                    "Declaration of trust",
+                    "Tenants in common with defined shares",
+                ],
                 what_to_ask="Ask whether a declaration of trust is needed to record unequal deposits, mortgage payments, bills, or ownership shares.",
                 priority="high",
-                source_text=contribution_source or _first_line_containing(lines, ["unequal"]) or "Unequal contributions are mentioned.",
+                source_text=contribution_source
+                or _first_line_containing(lines, ["unequal"])
+                or "Unequal contributions are mentioned.",
             )
         )
 
-    wills_source = _first_line_containing(lines, ["will", "wills", "dies", "death", "inheritance"])
-    if wills_source and any(word in full_text for word in ["joint tenant", "tenants in common", "property"]):
+    wills_source = _first_line_containing(
+        lines, ["will", "wills", "dies", "death", "inheritance"]
+    )
+    if wills_source and any(
+        word in full_text for word in ["joint tenant", "tenants in common", "property"]
+    ):
         decisions.append(
             DecisionItem(
                 decision="Whether wills are needed",
-                options=["Make or update wills", "Confirm existing wills are still suitable"],
+                options=[
+                    "Make or update wills",
+                    "Confirm existing wills are still suitable",
+                ],
                 what_to_ask="Ask whether your ownership choice changes what happens on death and whether both buyers should make or update wills before completion.",
                 priority="medium",
                 source_text=wills_source,
@@ -243,16 +488,43 @@ def _child_checklist_for(doc_type: str, lines: list[str]) -> list[str]:
 def _school_checklist_items(lines: list[str]) -> list[str]:
     items: list[str] = []
 
-    for needle_phrase in ["your child will need", "children will need", "pupils will need", "please bring", "your child should bring", "children should bring"]:
+    for needle_phrase in [
+        "your child will need",
+        "children will need",
+        "pupils will need",
+        "please bring",
+        "your child should bring",
+        "children should bring",
+    ]:
         for line in lines:
             lower = line.lower()
             if needle_phrase in lower:
                 after = lower.split(needle_phrase, 1)[1]
                 after = after.lstrip(": ").rstrip(".")
-                chunks = [c.strip().rstrip(".") for c in after.replace(",", "\n").replace(" and ", "\n").replace(";", "\n").split("\n")]
+                chunks = [
+                    c.strip().rstrip(".")
+                    for c in after.replace(",", "\n")
+                    .replace(" and ", "\n")
+                    .replace(";", "\n")
+                    .split("\n")
+                ]
                 for chunk in chunks:
                     chunk = chunk.strip().rstrip(").").lstrip(": ")
-                    if chunk and len(chunk) > 2 and not any(skip in chunk for skip in ["please", "the school", "if your", "inform", "medication", "no large"]):
+                    if (
+                        chunk
+                        and len(chunk) > 2
+                        and not any(
+                            skip in chunk
+                            for skip in [
+                                "please",
+                                "the school",
+                                "if your",
+                                "inform",
+                                "medication",
+                                "no large",
+                            ]
+                        )
+                    ):
                         items.append(chunk)
                 break
 
@@ -262,7 +534,11 @@ def _school_checklist_items(lines: list[str]) -> list[str]:
         if "wear" in lower and "should" in lower:
             matched_wear = True
             after = lower.split("wear", 1)[1].strip().rstrip(".")
-            for part in after.replace(" and bring ", "\n").replace(" and carry ", "\n").split("\n"):
+            for part in (
+                after.replace(" and bring ", "\n")
+                .replace(" and carry ", "\n")
+                .split("\n")
+            ):
                 part = part.strip().rstrip(".")
                 if part and len(part) > 3:
                     items.append(part)
@@ -278,15 +554,31 @@ def _school_checklist_items(lines: list[str]) -> list[str]:
 def _nhs_checklist_items(lines: list[str]) -> list[str]:
     items: list[str] = []
 
-    for needle in ["bring your", "bring a", "bring an", "please bring", "you will need to bring"]:
+    for needle in [
+        "bring your",
+        "bring a",
+        "bring an",
+        "please bring",
+        "you will need to bring",
+    ]:
         for line in lines:
             lower = line.lower()
             if needle in lower:
                 after = lower.split(needle, 1)[1].strip().rstrip(".")
-                chunks = [c.strip().rstrip(".") for c in after.replace(", and ", "\n").replace(", ", "\n").replace(" and ", "\n").split("\n")]
+                chunks = [
+                    c.strip().rstrip(".")
+                    for c in after.replace(", and ", "\n")
+                    .replace(", ", "\n")
+                    .replace(" and ", "\n")
+                    .split("\n")
+                ]
                 for chunk in chunks:
                     chunk = chunk.strip().rstrip(").").lstrip(": ")
-                    if chunk and len(chunk) > 2 and not any(skip in chunk for skip in ["please", "if you"]):
+                    if (
+                        chunk
+                        and len(chunk) > 2
+                        and not any(skip in chunk for skip in ["please", "if you"])
+                    ):
                         items.append(chunk)
 
     for line in lines:
@@ -297,32 +589,50 @@ def _nhs_checklist_items(lines: list[str]) -> list[str]:
     return items
 
 
-def _questions_for(doc_type: str, has_costs: bool, has_dates: bool, has_actions: bool, text: str = "") -> list[str]:
+def _questions_for(
+    doc_type: str, has_costs: bool, has_dates: bool, has_actions: bool, text: str = ""
+) -> list[str]:
     questions = []
     if has_costs:
-        questions.append("Is financial support or an alternative payment option available?")
+        questions.append(
+            "Is financial support or an alternative payment option available?"
+        )
     if has_dates:
-        questions.append("Can you confirm the exact deadline and whether late submissions are accepted?")
+        questions.append(
+            "Can you confirm the exact deadline and whether late submissions are accepted?"
+        )
     if has_actions:
         questions.append("Is there anything else I need to submit or bring?")
     if doc_type == "school_letter":
-        questions.append("What should my child bring on the day, and what time will they return?")
+        questions.append(
+            "What should my child bring on the day, and what time will they return?"
+        )
         if "medication" in text.lower() or "medical" in text.lower():
-            questions.append("What is the procedure for administering medication during the trip?")
+            questions.append(
+                "What is the procedure for administering medication during the trip?"
+            )
         if "packed lunch" in text.lower() or "lunch" in text.lower():
-            questions.append("Are school meals provided, or should I send money for food?")
+            questions.append(
+                "Are school meals provided, or should I send money for food?"
+            )
     elif doc_type == "council_notice":
         questions.append("What happens if I cannot meet the deadline?")
     elif doc_type == "nhs_guidance":
-        questions.append("Should I bring my NHS number or any medical records to the appointment?")
+        questions.append(
+            "Should I bring my NHS number or any medical records to the appointment?"
+        )
     elif doc_type == "housing_property":
         questions.append("Are there any additional fees or charges not listed?")
     elif doc_type == "hr_policy":
-        questions.append("Does this policy apply to my specific contract type or employment status?")
+        questions.append(
+            "Does this policy apply to my specific contract type or employment status?"
+        )
     return questions[:7]
 
 
-def _summary_for(doc_type: str, title: str, has_actions: bool, has_dates: bool, has_costs: bool) -> list[str]:
+def _summary_for(
+    doc_type: str, title: str, has_actions: bool, has_dates: bool, has_costs: bool
+) -> list[str]:
     readable = doc_type.replace("_", " ")
     summary = [f"This appears to be a {readable}: {title}."]
     if has_actions:
@@ -346,23 +656,30 @@ def _audience_for(doc_type: str) -> list[str]:
 
 
 def _source_quotes(lines: list[str]) -> list[str]:
-    useful = [line for line in lines if any(word in line.lower() for word in ["must", "please", "due", "by ", "contact", "payment", "return"])]
+    useful = [
+        line
+        for line in lines
+        if any(
+            word in line.lower()
+            for word in ["must", "please", "due", "by ", "contact", "payment", "return"]
+        )
+    ]
     return useful[:8]
 
 
 def _mentions_payment_request(lower_line: str) -> bool:
     words = set(re.findall(r"[a-z]+", lower_line))
-    return ("payment" in words and ("due" in words or "pay" in words)) or "payable" in words
+    return (
+        "payment" in words and ("due" in words or "pay" in words)
+    ) or "payable" in words
 
 
 def _line_deadline(line: str) -> str | None:
-    from .text_utils import extract_dates_with_context
     dates = extract_dates_with_context(line)
     return dates[0][0] if dates else None
 
 
 def _first_cost(line: str) -> str | None:
-    from .text_utils import extract_costs_with_context
     costs = extract_costs_with_context(line)
     return costs[0][0] if costs else None
 

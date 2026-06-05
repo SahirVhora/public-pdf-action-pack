@@ -1,4 +1,3 @@
-from pathlib import Path
 from action_pack.extractor import extract_text_from_path, extract_text_from_upload
 
 

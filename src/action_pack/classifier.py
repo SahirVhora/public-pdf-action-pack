@@ -4,12 +4,39 @@ import re
 from .schemas import DocumentType
 
 _RULES: list[tuple[DocumentType, list[str]]] = [
-    ("school_letter", ["school", "parents", "pupils", "year ", "consent form", "packed lunch", "term"]),
-    ("council_notice", ["council", "council tax", "borough", "recovery action", "planning", "resident"]),
+    (
+        "school_letter",
+        [
+            "school",
+            "parents",
+            "pupils",
+            "year ",
+            "consent form",
+            "packed lunch",
+            "term",
+        ],
+    ),
+    (
+        "council_notice",
+        [
+            "council",
+            "council tax",
+            "borough",
+            "recovery action",
+            "planning",
+            "resident",
+        ],
+    ),
     ("nhs_guidance", ["nhs", "patient", "appointment", "clinic", "hospital", "health"]),
-    ("housing_property", ["property", "solicitor", "survey", "mortgage", "tenant", "landlord", "lease"]),
+    (
+        "housing_property",
+        ["property", "solicitor", "survey", "mortgage", "tenant", "landlord", "lease"],
+    ),
     ("hr_policy", ["employee", "manager", "hr", "policy", "annual leave", "payroll"]),
-    ("government_guidance", ["gov.uk", "government", "eligibility", "benefit", "apply"]),
+    (
+        "government_guidance",
+        ["gov.uk", "government", "eligibility", "benefit", "apply"],
+    ),
 ]
 
 

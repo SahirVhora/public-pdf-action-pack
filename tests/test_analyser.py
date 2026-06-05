@@ -10,7 +10,7 @@ def test_build_prompt_messages_requires_strict_json_and_source_quotes():
 
 
 def test_parse_ai_json_accepts_fenced_json():
-    raw = "```json\n{\"title\":\"Notice\",\"document_type\":\"council_notice\",\"audience\":[\"Residents\"],\"plain_english_summary\":[\"Pay soon\"],\"key_dates\":[],\"required_actions\":[],\"optional_actions\":[],\"documents_needed\":[],\"costs\":[],\"contacts\":[],\"risks\":[],\"questions_to_ask\":[],\"urgency_score\":2,\"confidence\":\"medium\",\"source_quotes\":[]}\n```"
+    raw = '```json\n{"title":"Notice","document_type":"council_notice","audience":["Residents"],"plain_english_summary":["Pay soon"],"key_dates":[],"required_actions":[],"optional_actions":[],"documents_needed":[],"costs":[],"contacts":[],"risks":[],"questions_to_ask":[],"urgency_score":2,"confidence":"medium","source_quotes":[]}\n```'
     pack = parse_ai_json(raw)
     assert pack.title == "Notice"
     assert pack.document_type == "council_notice"

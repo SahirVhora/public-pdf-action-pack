@@ -30,7 +30,9 @@ def _extract_pdf(path: Path) -> str:
     try:
         import fitz
     except ImportError as exc:
-        raise RuntimeError("PyMuPDF is required for PDF extraction. Install pymupdf.") from exc
+        raise RuntimeError(
+            "PyMuPDF is required for PDF extraction. Install pymupdf."
+        ) from exc
 
     parts: list[str] = []
     with fitz.open(path) as doc:

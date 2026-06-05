@@ -1,5 +1,3 @@
-from pathlib import Path
-
 from action_pack.extractor import extract_text_from_path
 from action_pack.fallback_analyser import analyse_without_ai
 from action_pack.renderer import render_markdown
@@ -47,7 +45,9 @@ def test_joint_tenants_repayment_sentence_not_treated_as_payment_action():
 BUYING A PROPERTY IN JOINT NAMES
 Where co-owners are going to be making unequal contributions to the repayment mortgage payments and household bills.
 """)
-    assert "Make the required payment" not in "\n".join(action.action for action in pack.required_actions)
+    assert "Make the required payment" not in "\n".join(
+        action.action for action in pack.required_actions
+    )
 
 
 def test_client_care_return_section_extracts_specific_required_items():
@@ -193,7 +193,10 @@ This may result in bailiff action and additional costs.
 
     pack = analyse_without_ai(text)
 
-    assert any("recovery" in risk.risk.lower() or "bailiff" in risk.risk.lower() for risk in pack.risks)
+    assert any(
+        "recovery" in risk.risk.lower() or "bailiff" in risk.risk.lower()
+        for risk in pack.risks
+    )
     assert any("cost" in risk.risk.lower() for risk in pack.risks)
 
 
@@ -210,9 +213,13 @@ The Cardiology department is on the first floor, follow the blue signs.
     pack = analyse_without_ai(text)
 
     assert pack.document_type == "nhs_guidance"
-    assert any("medication" in item.lower() for item in pack.child_checklist) or \
-           any("appointment letter" in item.lower() for item in pack.child_checklist)
-    assert any("nhs number" in q.lower() or "medical record" in q.lower() for q in pack.questions_to_ask)
+    assert any("medication" in item.lower() for item in pack.child_checklist) or any(
+        "appointment letter" in item.lower() for item in pack.child_checklist
+    )
+    assert any(
+        "nhs number" in q.lower() or "medical record" in q.lower()
+        for q in pack.questions_to_ask
+    )
 
 
 def test_markdown_hides_child_checklist_for_non_school():
@@ -238,7 +245,9 @@ Contact us at solicitor@example.com for any questions.
 
     pack = analyse_without_ai(text)
 
-    return_action = next(a for a in pack.required_actions if "signed" in a.action.lower())
+    return_action = next(
+        a for a in pack.required_actions if "signed" in a.action.lower()
+    )
     assert "Page 1" in return_action.source_text
 
     payment_action = next(a for a in pack.required_actions if "pay" in a.action.lower())

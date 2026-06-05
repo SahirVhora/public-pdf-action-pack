@@ -25,7 +25,13 @@ def test_source_is_not_duplicate_when_evidence_adds_context():
 
 
 def test_action_label_contains_owner_priority_and_deadline_once():
-    action = ActionItem(action="Return the form", owner="Reader", priority="high", deadline="2026-06-14", source_text="Return the form")
+    action = ActionItem(
+        action="Return the form",
+        owner="Reader",
+        priority="high",
+        deadline="2026-06-14",
+        source_text="Return the form",
+    )
     assert action_label(action) == "Return the form (high) - Reader - due 2026-06-14"
 
 
@@ -35,7 +41,14 @@ def test_markdown_does_not_repeat_duplicate_source_text():
         document_type="housing_property",
         audience=["Reader"],
         plain_english_summary=["Summary"],
-        required_actions=[ActionItem(action="Return the form", owner="Reader", priority="high", source_text="Return the form")],
+        required_actions=[
+            ActionItem(
+                action="Return the form",
+                owner="Reader",
+                priority="high",
+                source_text="Return the form",
+            )
+        ],
         source_quotes=[],
     )
     markdown = render_markdown(pack)

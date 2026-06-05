@@ -7,16 +7,23 @@ from action_pack.pipeline import process_file, process_text
 
 
 def main() -> int:
-    parser = argparse.ArgumentParser(description="Turn public-sector documents into action packs.")
-    parser.add_argument("input", nargs="?", help="Path to PDF/TXT/MD file. If omitted, reads stdin.")
+    parser = argparse.ArgumentParser(
+        description="Turn public-sector documents into action packs."
+    )
+    parser.add_argument(
+        "input", nargs="?", help="Path to PDF/TXT/MD file. If omitted, reads stdin."
+    )
     parser.add_argument("--out", default="action-pack.md", help="Markdown output path")
-    parser.add_argument("--no-ai", action="store_true", help="Use deterministic local fallback only")
+    parser.add_argument(
+        "--no-ai", action="store_true", help="Use deterministic local fallback only"
+    )
     args = parser.parse_args()
 
     if args.input:
         result = process_file(args.input, use_ai=not args.no_ai)
     else:
         import sys
+
         result = process_text(sys.stdin.read(), use_ai=not args.no_ai)
 
     out = Path(args.out)

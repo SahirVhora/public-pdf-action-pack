@@ -14,7 +14,9 @@ from .schemas import ActionPack
 DEFAULT_MODEL = "openai/gpt-4o-mini"
 
 
-def build_prompt_messages(text: str, document_type: str | None = None) -> list[dict[str, str]]:
+def build_prompt_messages(
+    text: str, document_type: str | None = None
+) -> list[dict[str, str]]:
     doc_type = document_type or classify_document(text)
     schema_hint = ActionPack.model_json_schema()
     return [
@@ -39,7 +41,9 @@ def build_prompt_messages(text: str, document_type: str | None = None) -> list[d
     ]
 
 
-def analyse_with_ai_or_fallback(text: str, api_key: str | None = None, model: str | None = None) -> ActionPack:
+def analyse_with_ai_or_fallback(
+    text: str, api_key: str | None = None, model: str | None = None
+) -> ActionPack:
     key = api_key or os.getenv("OPENROUTER_API_KEY")
     if not key:
         return analyse_without_ai(text)
@@ -53,7 +57,11 @@ def analyse_with_ai_or_fallback(text: str, api_key: str | None = None, model: st
                 "HTTP-Referer": "https://github.com/SahirVhora/public-pdf-action-pack",
                 "X-Title": "Public PDF Action Pack",
             },
-            json={"model": model or os.getenv("OPENROUTER_MODEL", DEFAULT_MODEL), "messages": messages, "temperature": 0.1},
+            json={
+                "model": model or os.getenv("OPENROUTER_MODEL", DEFAULT_MODEL),
+                "messages": messages,
+                "temperature": 0.1,
+            },
             timeout=60,
         )
         response.raise_for_status()
