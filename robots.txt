@@ -1,0 +1,4 @@
+User-agent: *
+Allow: /
+
+Sitemap: https://sahirvhora.github.io/public-pdf-action-pack/sitemap.xml

@@ -2,6 +2,8 @@
 
 Turn public-sector PDFs into plain-English actions, deadlines, and checklists.
 
+**Topics:** `pdf` `document-processing` `public-sector` `python` `streamlit` `openrouter` `action-pack` `checklist-generator` `local-first` `privacy-respecting`
+
 ## What it does
 
 - Upload PDF, TXT, or Markdown
@@ -24,7 +26,9 @@ Turn public-sector PDFs into plain-English actions, deadlines, and checklists.
 
 ## Privacy model
 
-MVP is for public documents only. Do not upload sensitive private documents. The app does not store documents. If `OPENROUTER_API_KEY` is set and AI mode is enabled, extracted text is sent to OpenRouter. Turn AI off for deterministic local fallback.
+MVP is for public documents only. Do not upload sensitive private documents such as medical letters, benefits decisions, immigration papers, bank statements, payroll files, tenancy disputes, or anything containing private personal data.
+
+The app does not intentionally store uploaded documents. If `OPENROUTER_API_KEY` is set and AI mode is enabled, extracted text is sent to OpenRouter. Turn AI off for deterministic local fallback. See [SECURITY.md](SECURITY.md) before using the app with real-world documents.
 
 ## Demo PDFs
 
