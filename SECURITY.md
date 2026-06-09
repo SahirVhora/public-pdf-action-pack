@@ -1,16 +1,35 @@
-# Security Notes
+# Security Policy
 
-Public PDF Action Pack is designed for public-sector documents that are already safe to share. It is not intended for private letters, medical records, immigration documents, bank statements, payroll files, or other sensitive personal data.
+## Supported Versions
 
-## Document Handling
+This project is actively maintained. Security updates are applied to the latest release.
 
-- Do not upload sensitive private documents.
-- Do not commit uploaded documents, extracted text, generated action packs, or screenshots containing personal details.
-- Demo files should stay synthetic or clearly public-domain.
-- If AI mode is enabled with `OPENROUTER_API_KEY`, extracted document text may be sent to OpenRouter. Use `--no-ai` or turn AI off for local deterministic analysis.
+## Reporting a Vulnerability
 
-## Publishing Checklist
+If you discover a security vulnerability, please report it responsibly.
 
-- Run `pytest -q` before publishing changes.
-- Review demos and generated exports for personal data.
-- Keep `.env`, local outputs, and temporary upload folders out of version control.
+**Do NOT open a public issue.**
+
+Instead, email [sahir.vhora@gmail.com](mailto:sahir.vhora@gmail.com) with:
+- Description of the vulnerability
+- Steps to reproduce
+- Potential impact
+- Suggested fix (if any)
+
+## What to Expect
+
+- Acknowledgement within 48 hours
+- Assessment of severity and impact
+- Timeline for fix disclosure
+- Credit in release notes (unless you prefer anonymity)
+
+## Security Best Practices
+
+- Keep dependencies updated (Dependabot enabled)
+- Never commit secrets, API keys, or credentials
+- Use environment variables for configuration
+- Review PRs for security implications
+
+## Security Updates
+
+Security fixes are released as patch versions. Subscribe to releases to be notified of updates.
